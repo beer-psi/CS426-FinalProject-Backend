@@ -1,0 +1,22 @@
+[project]
+name = "finalproject-backend"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "aiosql>=13.4",
+    "aiosqlite>=0.21.0",
+    "argon2-cffi>=25.1.0",
+    "httpx-oauth>=0.16.1",
+    "litestar[jwt]>=2.17.0",
+    "pyjwt>=2.9.0",
+    "python-dotenv>=1.1.1",
+    "uvicorn>=0.35.0",
+]
+
+[dependency-groups]
+dev = [
+    "basedpyright>=1.31.3",
+    "ruff>=0.12.11",
+]
