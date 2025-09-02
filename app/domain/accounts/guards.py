@@ -56,6 +56,9 @@ auth = OAuth2PasswordBearerAuth[User](
     exclude=[
         urls.ACCOUNT_LOGIN,
         urls.ACCOUNT_REGISTER,
+        urls.ACCOUNT_OAUTH_VIEW_PROVIDERS,
+        urls.ACCOUNT_OAUTH_LOGIN,
+        urls.ACCOUNT_OAUTH_AUTHORIZE,
         "^/schema",
     ],
 )

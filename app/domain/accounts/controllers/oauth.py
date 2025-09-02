@@ -1,4 +1,5 @@
 from datetime import UTC, datetime, timedelta
+import os
 from typing import Any, Literal, cast, final
 
 import aiosqlite
@@ -26,6 +27,7 @@ from app.domain.accounts.dependencies import (
 from app.domain.accounts.guards import auth
 from app.domain.accounts.repositories import OAuth2AccountRepository, UserRepository
 from app.domain.accounts.schemas import OAuth2Provider
+from app.lib.crypt import hash_password
 
 OAuth2ProviderKey = Literal["google"]
 
@@ -200,7 +202,9 @@ class OAuthController(Controller):
                             email,
                         )
 
-            user = await user_repository.insert(name, email, None, "")
+            user = await user_repository.insert(
+                name, email, None, await hash_password(os.urandom(32).hex())
+            )
 
         await oauth2_account_repository.insert(
             provider, user.id, id, email, access_token, refresh_token, expires_at
