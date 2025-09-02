@@ -24,6 +24,13 @@ Create the database by creating the `data/` folder and run:
 litestar database setup
 ```
 
+Run the development server:
+
+```shell
+litestar run --debug --reload --reload-dir app
+# or install just and run `just dev`
+```
+
 ## Migrations
 
 Create a database migration by running:
