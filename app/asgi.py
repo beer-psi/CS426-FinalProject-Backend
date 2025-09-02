@@ -8,11 +8,11 @@ def create_app() -> "Litestar":
     from litestar.openapi.config import OpenAPIConfig
     from litestar.openapi.plugins import JsonRenderPlugin, RedocRenderPlugin
 
-    from .config import settings
+    from .config import sqlite
     from .domain.accounts.guards import auth
     from .server import routers
     from .server.plugins import MigratorCLIPlugin
-    from .server.plugins.database import SQLitePoolConfig, SQLitePoolPlugin
+    from .server.plugins.database import SQLitePoolPlugin
 
     pyproject = tomllib.loads(
         (Path(__file__).parent.parent / "pyproject.toml").read_text()
@@ -32,9 +32,7 @@ def create_app() -> "Litestar":
         ),
         plugins=[
             MigratorCLIPlugin(),
-            SQLitePoolPlugin(
-                SQLitePoolConfig(database_path=settings.app.DATABASE_PATH)
-            ),
+            SQLitePoolPlugin(sqlite),
         ],
     )
 

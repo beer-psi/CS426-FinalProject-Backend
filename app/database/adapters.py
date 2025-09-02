@@ -2,15 +2,18 @@ from datetime import UTC, datetime
 
 import aiosqlite
 
-DT_FORMAT = "%Y-%m-%d %H:%M:%S"
-
 
 def adapt_datetime(val: datetime) -> str:
-    return val.strftime(DT_FORMAT)
+    return val.isoformat()
 
 
 def convert_datetime(val: bytes) -> datetime:
-    return datetime.strptime(val.decode(), DT_FORMAT).replace(tzinfo=UTC)
+    dt = datetime.fromisoformat(val.decode())
+
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=UTC)
+
+    return dt
 
 
 def register_adapters():

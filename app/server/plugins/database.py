@@ -16,6 +16,8 @@ from litestar.di import Provide
 from litestar.exceptions import ImproperlyConfiguredException
 from litestar.plugins import InitPluginProtocol
 
+from app.database import adapters
+
 
 def set_connection_autocommit(connection: sqlite3.Connection, *, state: bool):
     connection.autocommit = state
@@ -57,7 +59,12 @@ class SQLitePoolConfig:
         self.__class__._POOL_APP_STATE_KEY_REGISTRY.add(self.pool_app_state_key)
 
     async def _connection_factory(self):
-        connection = await aiosqlite.connect(self.database_path)
+        adapters.register_adapters()
+        adapters.register_converters()
+
+        connection = await aiosqlite.connect(
+            self.database_path, detect_types=sqlite3.PARSE_DECLTYPES
+        )
         connection.row_factory = aiosqlite.Row
 
         if (inner := connection._connection) is not None:

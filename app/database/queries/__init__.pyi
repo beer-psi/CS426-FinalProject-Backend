@@ -48,8 +48,20 @@ class OAuth2AccountQueries:
         expires_at: datetime | None,
     ) -> None: ...
 
+class TokenDenylistQueries:
+    async def get(
+        self, connection: "aiosqlite.Connection", *, token: str
+    ) -> "aiosqlite.Row | None": ...
+    async def insert(
+        self, connection: "aiosqlite.Connection", *, token: str, expires_at: datetime
+    ) -> None: ...
+    async def delete(
+        self, connection: "aiosqlite.Connection", *, token: str
+    ) -> None: ...
+
 class Queries:
     user: UserQueries
     oauth2_account: OAuth2AccountQueries
+    token_denylist: TokenDenylistQueries
 
 queries: Queries
