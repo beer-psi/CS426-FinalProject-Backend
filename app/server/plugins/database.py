@@ -2,9 +2,9 @@
 import sqlite3
 from collections.abc import AsyncGenerator, Sequence
 from contextlib import asynccontextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, cast, override
+from typing import Any, ClassVar, cast, override
 
 import aiosqlite
 import aiosqlitepool.protocols
@@ -30,10 +30,31 @@ class SQLitePoolConfig:
 
     pool_app_state_key: str = "db_pool"
 
+    _POOL_APP_STATE_KEY_REGISTRY: ClassVar[set[str]] = field(init=False, default=set())
+
     pool_size: int | None = 10
     acquisition_timeout: int | None = 30
     idle_timeout: int | None = 86400
     operation_timeout: int | None = 10
+
+    def _ensure_unique(
+        self,
+        registry_name: str,
+        key: str,
+        new_key: str | None = None,
+        _iter: int = 0,
+    ) -> str:
+        new_key = new_key if new_key is not None else key
+        if new_key in getattr(self.__class__, registry_name, {}):
+            _iter += 1
+            new_key = self._ensure_unique(registry_name, key, f"{key}_{_iter}", _iter)
+        return new_key
+
+    def __post_init__(self) -> None:
+        self.pool_app_state_key = self._ensure_unique(
+            "_POOL_APP_STATE_KEY_REGISTRY", self.pool_app_state_key
+        )
+        self.__class__._POOL_APP_STATE_KEY_REGISTRY.add(self.pool_app_state_key)
 
     async def _connection_factory(self):
         connection = await aiosqlite.connect(self.database_path)
@@ -82,8 +103,8 @@ class SQLitePoolConfig:
     ) -> AsyncGenerator[aiosqlite.Connection, Any]:
         pool: SQLiteConnectionPool = state[self.pool_app_state_key]
 
-        async with pool.connection() as connection:
-            yield cast(aiosqlite.Connection, cast(object, connection))
+        async with pool.connection() as generic_connection:
+            yield cast(aiosqlite.Connection, cast(object, generic_connection))
 
 
 class SQLitePoolPlugin(InitPluginProtocol):
@@ -102,17 +123,11 @@ class SQLitePoolPlugin(InitPluginProtocol):
             return
 
         pool_dependency_keys = {c.pool_dependency_key for c in self._config}
-        pool_app_state_keys = {c.pool_app_state_key for c in self._config}
         connection_keys = {c.connection_dependency_key for c in self._config}
 
         if len(pool_dependency_keys) != len(self._config):
             raise ImproperlyConfiguredException(
                 "pool dependency keys are not unique across multiple configurations"
-            )
-
-        if len(pool_app_state_keys) != len(self._config):
-            raise ImproperlyConfiguredException(
-                "pool app state keys are not unique across multiple configurations"
             )
 
         if len(connection_keys) != len(self._config):
