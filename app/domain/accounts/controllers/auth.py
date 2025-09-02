@@ -4,13 +4,16 @@ import aiosqlite
 from litestar import Controller, Request, Response, get, post
 from litestar.di import Provide
 from litestar.exceptions import ClientException, NotAuthorizedException
-from litestar.security.jwt import OAuth2Login
+from litestar.security.jwt import OAuth2Login, Token
 
 from app.domain.accounts import urls
-from app.domain.accounts.dependencies import provide_user_repository
+from app.domain.accounts.dependencies import (
+    provide_token_denylist_repository,
+    provide_user_repository,
+)
 from app.domain.accounts.guards import auth
 from app.domain.accounts.models import User, UserPublic
-from app.domain.accounts.repositories import UserRepository
+from app.domain.accounts.repositories import TokenDenylistRepository, UserRepository
 from app.domain.accounts.schemas import AccountLogin, AccountRegister
 from app.lib.crypt import hash_password, verify_password
 
@@ -19,7 +22,10 @@ from app.lib.crypt import hash_password, verify_password
 class AuthController(Controller):
     tags = ["Authentication"]
     dependencies = {
-        "user_repository": Provide(provide_user_repository, sync_to_thread=False)
+        "user_repository": Provide(provide_user_repository, sync_to_thread=False),
+        "token_denylist_repository": Provide(
+            provide_token_denylist_repository, sync_to_thread=False
+        ),
     }
 
     @post(
@@ -42,7 +48,17 @@ class AuthController(Controller):
         return auth.login(str(user.id), send_token_as_response_body=True)
 
     @post(urls.ACCOUNT_LOGOUT, operation_id="AccountLogout")
-    async def logout(self, request: Request[Any, Any, Any]) -> Response[dict[str, str]]:  # pyright: ignore[reportExplicitAny]
+    async def logout(
+        self,
+        request: Request[Any, Token, Any],  # pyright: ignore[reportExplicitAny]
+        token_denylist_repository: TokenDenylistRepository,
+        db_connection: aiosqlite.Connection,
+    ) -> Response[dict[str, str]]:
+        token = request.auth.encode(auth.token_secret, auth.algorithm)
+
+        await token_denylist_repository.insert(token, request.auth.exp)
+        await db_connection.commit()
+
         _ = request.cookies.pop(auth.key, None)
         request.clear_session()
 

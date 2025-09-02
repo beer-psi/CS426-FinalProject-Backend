@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, override
 
 from app.database import queries
 
-from .models import OAuth2Account, User, UserPublic
+from .models import DeniedToken, OAuth2Account, User, UserPublic
 
 if TYPE_CHECKING:
     import aiosqlite
@@ -54,6 +54,17 @@ class OAuth2AccountRepository(ABC):
         expires_at: datetime | None,
     ):
         pass
+
+
+class TokenDenylistRepository(ABC):
+    @abstractmethod
+    async def insert(self, token: str, expires_at: datetime) -> None: ...
+
+    @abstractmethod
+    async def get(self, token: str) -> DeniedToken | None: ...
+
+    @abstractmethod
+    async def delete(self, token: str) -> None: ...
 
 
 class UserRepositoryImpl(UserRepository):
@@ -174,3 +185,30 @@ class OAuth2AccountRepositoryImpl(OAuth2AccountRepository):
             refresh_token=refresh_token,
             expires_at=expires_at,
         )
+
+
+class TokenDenylistRepositoryImpl(TokenDenylistRepository):
+    def __init__(self, connection: "aiosqlite.Connection") -> None:
+        self.connection: "aiosqlite.Connection" = connection
+
+    @override
+    async def get(self, token: str) -> DeniedToken | None:
+        row = await queries.token_denylist.get(self.connection, token=token)
+
+        if row is None:
+            return None
+
+        return DeniedToken(
+            token=row["token"],
+            expires_at=row["expires_at"],
+        )
+
+    @override
+    async def insert(self, token: str, expires_at: datetime) -> None:
+        await queries.token_denylist.insert(
+            self.connection, token=token, expires_at=expires_at
+        )
+
+    @override
+    async def delete(self, token: str) -> None:
+        await queries.token_denylist.delete(self.connection, token=token)

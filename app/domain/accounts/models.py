@@ -24,3 +24,8 @@ class OAuth2Account(Struct):
     refresh_token: str | None
     expires_at: datetime | None
     user: UserPublic
+
+
+class DeniedToken(Struct):
+    token: str
+    expires_at: datetime
