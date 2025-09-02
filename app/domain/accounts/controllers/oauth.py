@@ -2,6 +2,8 @@ from datetime import UTC, datetime, timedelta
 from typing import Any, Literal, cast, final
 
 import aiosqlite
+import msgspec
+from httpx_oauth.clients import google
 from httpx_oauth.clients.google import GoogleOAuth2
 from httpx_oauth.exceptions import GetIdEmailError
 from httpx_oauth.oauth2 import BaseOAuth2
@@ -174,7 +176,31 @@ class OAuthController(Controller):
         user = await user_repository.get_by_email(email)
 
         if user is None:
-            user = await user_repository.insert(email, email, None, "")
+            name = email
+
+            if provider == "google":
+                async with provider_client.get_httpx_client() as client:
+                    response = await client.get(
+                        google.PROFILE_ENDPOINT,
+                        params={"personFields": "emailAddresses,names"},
+                        headers={
+                            **provider_client.request_headers,
+                            "authorization": f"Bearer {access_token}",
+                        },
+                    )
+
+                    if response.is_success:
+                        profile = msgspec.json.decode(response.content)  # pyright: ignore[reportAny]
+                        name = next(
+                            (
+                                name["displayName"]
+                                for name in profile["names"]  # pyright: ignore[reportAny]
+                                if name["metadata"]["primary"]
+                            ),
+                            email,
+                        )
+
+            user = await user_repository.insert(name, email, None, "")
 
         await oauth2_account_repository.insert(
             provider, user.id, id, email, access_token, refresh_token, expires_at

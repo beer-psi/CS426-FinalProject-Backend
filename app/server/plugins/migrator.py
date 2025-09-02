@@ -253,7 +253,7 @@ class MigratorCLIPlugin(CLIPluginProtocol):
             )
 
         @db.command(
-            "reset",
+            "setup",
             help="Creates the database at the specified database path and runs any pending migrations",
         )
         @click.option(

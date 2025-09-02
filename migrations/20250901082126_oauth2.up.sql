@@ -8,5 +8,5 @@ CREATE TABLE oauth2_accounts(
     refresh_token TEXT,
     expires_at DATETIME,
     PRIMARY KEY(user_id, provider),
-    FOREIGN KEY(user_id) REFERENCES users(id)
+    FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
 );
