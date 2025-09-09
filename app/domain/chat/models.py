@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Literal
 
-from msgspec import Struct
+from msgspec import UNSET, Struct, UnsetType
 
 from app.domain.accounts.models import UserPublic
 
@@ -11,8 +11,7 @@ class MessageAttachment(Struct):
     filename: str
     content_type: str
     file_size: int
-    created_at: datetime
-    url: str
+    url: str | UnsetType = UNSET
 
 
 class Message(Struct):

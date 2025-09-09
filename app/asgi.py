@@ -39,7 +39,8 @@ def create_app() -> "Litestar":
         ),
         plugins=[
             ChannelsPlugin(
-                MemoryChannelsBackend(), channels=["messages", "conversations"]
+                MemoryChannelsBackend(),
+                arbitrary_channels_allowed=True,  # each user will have their own channel
             ),
             MigratorCLIPlugin(),
             SQLitePoolPlugin(sqlite),

@@ -2,9 +2,12 @@ from typing import TYPE_CHECKING
 
 from app.domain.accounts.controllers import AuthController, OAuthController
 from app.domain.chat.controllers import (
+    AttachmentsController,
     ConversationParticipantsController,
     ConversationsController,
+    MessagesController,
 )
+from app.domain.gateway.controller import GatewayController
 
 if TYPE_CHECKING:
     from litestar.types import ControllerRouterHandler
@@ -12,6 +15,9 @@ if TYPE_CHECKING:
 route_handlers: "list[ControllerRouterHandler]" = [
     AuthController,
     OAuthController,
+    AttachmentsController,
     ConversationsController,
     ConversationParticipantsController,
+    MessagesController,
+    GatewayController,
 ]

@@ -122,6 +122,69 @@ class ChatQueries(aiosql.queries.Queries):
         conversation_id: int,
         user_id: int,
     ) -> int: ...
+    async def get_attachment_content(
+        self,
+        connection: "aiosqlite.Connection",
+        *,
+        conversation_id: int,
+        message_id: int,
+        attachment_id: int,
+    ) -> bytes | None: ...
+    async def insert_attachment(
+        self,
+        connection: "aiosqlite.Connection",
+        *,
+        message_id: int,
+        filename: str,
+        content_type: str,
+        file_size: int,
+        content: bytes,
+    ) -> "aiosqlite.Row": ...
+    async def get_message(
+        self,
+        connection: "aiosqlite.Connection",
+        *,
+        id: int,
+    ) -> list["aiosqlite.Row"]: ...
+    async def get_messages_before(
+        self,
+        connection: "aiosqlite.Connection",
+        *,
+        conversation_id: int,
+        before: float,
+        limit: int,
+    ) -> list["aiosqlite.Row"]: ...
+    async def get_messages_after(
+        self,
+        connection: "aiosqlite.Connection",
+        *,
+        conversation_id: int,
+        after: float,
+        limit: int,
+    ) -> list["aiosqlite.Row"]: ...
+    async def get_messages_around(
+        self,
+        connection: "aiosqlite.Connection",
+        *,
+        conversation_id: int,
+        around: float,
+        limit: int,
+    ) -> list["aiosqlite.Row"]: ...
+    async def insert_message(
+        self,
+        connection: "aiosqlite.Connection",
+        *,
+        conversation_id: int,
+        reply_to_id: int | None,
+        user_id: int,
+        content: str | None,
+    ) -> "aiosqlite.Row": ...
+    async def delete_message(
+        self,
+        connection: "aiosqlite.Connection",
+        *,
+        id: int,
+    ) -> int: ...
 
 class Queries(aiosql.queries.Queries):
     user: UserQueries

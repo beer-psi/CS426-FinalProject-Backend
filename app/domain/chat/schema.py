@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+from litestar.datastructures import UploadFile
 from msgspec import UNSET, Struct, UnsetType
 
 
@@ -14,3 +16,10 @@ class ConversationCreateGroup(Struct, tag="group"):
 class ConversationUpdate(Struct):
     name: str | None | UnsetType = UNSET
     description: str | None | UnsetType = UNSET
+
+
+@dataclass
+class MessageCreate:
+    reply_to_id: int | None = None
+    content: str | None = None
+    attachments: list[UploadFile] | None = None

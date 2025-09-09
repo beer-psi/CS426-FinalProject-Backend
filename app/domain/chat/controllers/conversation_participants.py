@@ -2,12 +2,14 @@ from typing import final
 
 import aiosqlite
 from litestar import Controller, delete, put
+from litestar.channels import ChannelsPlugin
 from litestar.di import Provide
 from litestar.exceptions import (
     ClientException,
     NotFoundException,
     PermissionDeniedException,
 )
+import msgspec
 
 from app.domain.accounts.dependencies import provide_user_repository
 from app.domain.accounts.models import User
@@ -52,6 +54,7 @@ class ConversationParticipantsController(Controller):
         conversations_repository: ConversationsRepository,
         conversation_participants_repository: ConversationParticipantsRepository,
         db_connection: aiosqlite.Connection,
+        channels: ChannelsPlugin,
     ) -> ConversationParticipant:
         user = await user_repository.get(user_id)
 
@@ -80,7 +83,31 @@ class ConversationParticipantsController(Controller):
             conversation_id, user_id, current_user.id, "user"
         )
 
+        conversation.participants.append(participant)
         await db_connection.commit()
+
+        channels.publish(  # pyright: ignore[reportUnknownMemberType]
+            {
+                "t": "CONVERSATION_CREATE",
+                "d": {
+                    **msgspec.to_builtins(conversation),
+                    "participant": msgspec.to_builtins(participant),
+                },
+            },
+            f"gateway_user_{user_id}",
+        )
+        channels.publish(  # pyright: ignore[reportUnknownMemberType]
+            {
+                "t": "CONVERSATION_PARTICIPANTS_UPDATE",
+                "d": {
+                    "id": conversation.id,
+                    "participant_count": len(conversation.participants),
+                    "added_participants": [participant],
+                    "removed_participant_ids": [],
+                },
+            },
+            [f"gateway_user_{p.user.id}" for p in conversation.participants],
+        )
 
         return participant
 
@@ -97,6 +124,7 @@ class ConversationParticipantsController(Controller):
         conversations_repository: ConversationsRepository,
         conversation_participants_repository: ConversationParticipantsRepository,
         db_connection: aiosqlite.Connection,
+        channels: ChannelsPlugin,
     ) -> ConversationParticipant:
         conversation = await conversations_repository.get(
             conversation_id, current_user.id
@@ -125,6 +153,27 @@ class ConversationParticipantsController(Controller):
         _ = await conversation_participants_repository.delete(conversation_id, user_id)
         await db_connection.commit()
 
+        channels.publish(  # pyright: ignore[reportUnknownMemberType]
+            {"t": "CONVERSATION_DELETE", "d": {"id": conversation.id}},
+            f"gateway_user_{removed_participant.user.id}",
+        )
+        channels.publish(  # pyright: ignore[reportUnknownMemberType]
+            {
+                "t": "CONVERSATION_MEMBERS_UPDATE",
+                "d": {
+                    "id": conversation.id,
+                    "participant_count": len(conversation.participants) - 1,
+                    "added_participants": [],
+                    "removed_participant_ids": [removed_participant.user.id],
+                },
+            },
+            [
+                f"gateway_user_{p.user.id}"
+                for p in conversation.participants
+                if p.user.id != removed_participant.user.id
+            ],
+        )
+
         return removed_participant
 
     @delete(
@@ -139,6 +188,7 @@ class ConversationParticipantsController(Controller):
         conversations_repository: ConversationsRepository,
         conversation_participants_repository: ConversationParticipantsRepository,
         db_connection: aiosqlite.Connection,
+        channels: ChannelsPlugin,
     ) -> ConversationParticipant:
         conversation = await conversations_repository.get(
             conversation_id, current_user.id
@@ -158,5 +208,26 @@ class ConversationParticipantsController(Controller):
             conversation_id, current_user.id
         )
         await db_connection.commit()
+
+        channels.publish(  # pyright: ignore[reportUnknownMemberType]
+            {"t": "CONVERSATION_DELETE", "d": {"id": conversation.id}},
+            f"gateway_user_{removed_participant.user.id}",
+        )
+        channels.publish(  # pyright: ignore[reportUnknownMemberType]
+            {
+                "t": "CONVERSATION_MEMBERS_UPDATE",
+                "d": {
+                    "id": conversation.id,
+                    "participant_count": len(conversation.participants) - 1,
+                    "added_participants": [],
+                    "removed_participant_ids": [removed_participant.user.id],
+                },
+            },
+            [
+                f"gateway_user_{p.user.id}"
+                for p in conversation.participants
+                if p.user.id != removed_participant.user.id
+            ],
+        )
 
         return removed_participant

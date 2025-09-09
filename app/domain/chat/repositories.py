@@ -1,12 +1,13 @@
 # pyright: reportAny=false
 from abc import ABC, abstractmethod
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Literal, override
 
 from app.database.queries import queries
 from app.domain.accounts.models import UserPublic
 from app.lib.utils import MISSING
 
-from .models import Conversation, ConversationParticipant
+from .models import Conversation, ConversationParticipant, Message, MessageAttachment
 
 if TYPE_CHECKING:
     import aiosqlite
@@ -23,7 +24,7 @@ class ConversationsRepository(ABC):
         ...
 
     @abstractmethod
-    async def get_by_user(
+    async def list_by_user(
         self, user_id: int, limit: int, offset: int
     ) -> list[Conversation]:
         """Get conversations that the user is a participant of."""
@@ -80,11 +81,47 @@ class ConversationParticipantsRepository(ABC):
 
 
 class MessagesRepository(ABC):
-    pass
+    @abstractmethod
+    async def get(self, conversation_id: int, id: int) -> Message | None: ...
+
+    @abstractmethod
+    async def list(
+        self,
+        conversation_id: int,
+        around: datetime | None = None,
+        before: datetime | None = None,
+        after: datetime | None = None,
+        limit: int = 50,
+    ) -> list[Message]: ...
+
+    @abstractmethod
+    async def insert(
+        self,
+        conversation_id: int,
+        reply_to_id: int | None,
+        user_id: int,
+        content: str | None,
+    ) -> Message: ...
+
+    @abstractmethod
+    async def delete(self, id: int) -> None: ...
 
 
 class MessageAttachmentsRepository(ABC):
-    pass
+    @abstractmethod
+    async def get_content(
+        self, conversation_id: int, message_id: int, attachment_id: int
+    ) -> bytes | None: ...
+
+    @abstractmethod
+    async def insert(
+        self,
+        message_id: int,
+        filename: str,
+        content_type: str,
+        filesize: int,
+        content: bytes,
+    ) -> MessageAttachment: ...
 
 
 class ConversationsRepositoryImpl(ConversationsRepository):
@@ -128,7 +165,7 @@ class ConversationsRepositoryImpl(ConversationsRepository):
         )
 
     @override
-    async def get_by_user(
+    async def list_by_user(
         self, user_id: int, limit: int, offset: int
     ) -> list[Conversation]:
         result: list[Conversation] = []
@@ -326,4 +363,186 @@ class ConversationParticipantsRepositoryImpl(ConversationParticipantsRepository)
     async def delete(self, conversation_id: int, user_id: int):
         _ = await queries.chat.delete_conversation_participant(
             self.connection, conversation_id=conversation_id, user_id=user_id
+        )
+
+
+class MessagesRepositoryImpl(MessagesRepository):
+    def __init__(self, connection: "aiosqlite.Connection") -> None:
+        self.connection: "aiosqlite.Connection" = connection
+
+    @override
+    async def get(self, conversation_id: int, id: int) -> Message | None:
+        rows = await queries.chat.get_message(self.connection, id=id)
+
+        if len(rows) == 0:
+            return None
+
+        row = rows[0]
+
+        if row["message_conversation_id"] != conversation_id:
+            return None
+
+        return Message(
+            id=row["message_id"],
+            conversation_id=row["message_conversation_id"],
+            reply_to_id=row["message_reply_to_id"],
+            user_id=row["message_user_id"],
+            content=row["message_content"],
+            created_at=row["message_created_at"],
+            updated_at=row["message_updated_at"],
+            edited_at=row["message_edited_at"],
+            attachments=[
+                MessageAttachment(
+                    id=row["message_attachment_id"],
+                    filename=row["message_attachment_filename"],
+                    content_type=row["message_attachment_content_type"],
+                    file_size=row["message_attachment_file_size"],
+                )
+                for row in rows
+            ],
+        )
+
+    @override
+    async def list(
+        self,
+        conversation_id: int,
+        around: datetime | None = None,
+        before: datetime | None = None,
+        after: datetime | None = None,
+        limit: int = 50,
+    ) -> list[Message]:
+        result: list[Message] = []
+
+        if around is not None:
+            rows = await queries.chat.get_messages_around(
+                self.connection,
+                conversation_id=conversation_id,
+                around=around.timestamp(),
+                limit=limit,
+            )
+        elif before is not None:
+            rows = await queries.chat.get_messages_before(
+                self.connection,
+                conversation_id=conversation_id,
+                before=before.timestamp(),
+                limit=limit,
+            )
+        elif after is not None:
+            rows = await queries.chat.get_messages_after(
+                self.connection,
+                conversation_id=conversation_id,
+                after=after.timestamp(),
+                limit=limit,
+            )
+        else:
+            rows = await queries.chat.get_messages_before(
+                self.connection,
+                conversation_id=conversation_id,
+                before=datetime.now(UTC).timestamp(),
+                limit=limit,
+            )
+
+        rows_by_message_id: dict[int, list["aiosqlite.Row"]] = {}
+
+        for row in rows:
+            rows_by_message_id.setdefault(row["message_id"], []).append(row)
+
+        # the rows are ordered from latest message to oldest, and dictionaries
+        # remember their insertion order since python 3.7+
+        for rows in rows_by_message_id.values():
+            row = rows[0]
+            message = Message(
+                id=row["message_id"],
+                conversation_id=row["message_conversation_id"],
+                reply_to_id=row["message_reply_to_id"],
+                user_id=row["message_user_id"],
+                content=row["message_content"],
+                created_at=row["message_created_at"],
+                updated_at=row["message_updated_at"],
+                edited_at=row["message_edited_at"],
+                attachments=[
+                    MessageAttachment(
+                        id=row["message_attachment_id"],
+                        filename=row["message_attachment_filename"],
+                        content_type=row["message_attachment_content_type"],
+                        file_size=row["message_attachment_file_size"],
+                    )
+                    for row in rows
+                ],
+            )
+
+            result.append(message)
+
+        return result
+
+    @override
+    async def insert(
+        self,
+        conversation_id: int,
+        reply_to_id: int | None,
+        user_id: int,
+        content: str | None,
+    ) -> Message:
+        row = await queries.chat.insert_message(
+            self.connection,
+            conversation_id=conversation_id,
+            reply_to_id=reply_to_id,
+            user_id=user_id,
+            content=content,
+        )
+
+        return Message(
+            id=row["id"],
+            conversation_id=row["conversation_id"],
+            reply_to_id=row["reply_to_id"],
+            user_id=row["user_id"],
+            content=row["content"],
+            created_at=row["created_at"],
+            updated_at=row["updated_at"],
+            edited_at=row["edited_at"],
+            attachments=[],
+        )
+
+    @override
+    async def delete(self, id: int) -> None:
+        _ = await queries.chat.delete_message(self.connection, id=id)
+
+
+class MessageAttachmentsRepositoryImpl(MessageAttachmentsRepository):
+    def __init__(self, connection: "aiosqlite.Connection") -> None:
+        self.connection: "aiosqlite.Connection" = connection
+
+    @override
+    async def get_content(
+        self, conversation_id: int, message_id: int, attachment_id: int
+    ) -> bytes | None:
+        return await queries.chat.get_attachment_content(
+            self.connection,
+            conversation_id=conversation_id,
+            message_id=message_id,
+            attachment_id=attachment_id,
+        )
+
+    @override
+    async def insert(
+        self,
+        message_id: int,
+        filename: str,
+        content_type: str,
+        filesize: int,
+        content: bytes,
+    ) -> MessageAttachment:
+        row = await queries.chat.insert_attachment(
+            self.connection,
+            message_id=message_id,
+            filename=filename,
+            content_type=content_type,
+            file_size=filesize,
+            content=content,
+        )
+        return MessageAttachment(
+            id=row["id"],
+            filename=row["filename"],
+            content_type=row["content_type"],
+            file_size=row["file_size"],
         )

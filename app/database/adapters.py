@@ -4,7 +4,7 @@ import aiosqlite
 
 
 def adapt_datetime(val: datetime) -> str:
-    return val.isoformat()
+    return val.strftime("%Y-%m-%d %H:%M:%S")
 
 
 def convert_datetime(val: bytes) -> datetime:

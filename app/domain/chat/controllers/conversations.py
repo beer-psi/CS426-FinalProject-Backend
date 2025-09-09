@@ -3,6 +3,7 @@ from typing import Annotated, final
 import aiosqlite
 import msgspec
 from litestar import Controller, delete, get, patch, post
+from litestar.channels import ChannelsPlugin
 from litestar.di import Provide
 from litestar.exceptions import (
     ClientException,
@@ -58,7 +59,7 @@ class ConversationsController(Controller):
         current_user: User,
         conversations_repository: ConversationsRepository,
     ) -> list[Conversation]:
-        return await conversations_repository.get_by_user(
+        return await conversations_repository.list_by_user(
             current_user.id, 10, (page - 1) * 10
         )
 
@@ -97,6 +98,7 @@ class ConversationsController(Controller):
         conversation_participants_repository: ConversationParticipantsRepository,
         user_repository: UserRepository,
         db_connection: aiosqlite.Connection,
+        channels: ChannelsPlugin,
     ) -> Conversation:
         if isinstance(data, ConversationCreateDirect):
             if await user_repository.get(data.recipient_id) is None:
@@ -140,6 +142,15 @@ class ConversationsController(Controller):
                 )
 
         await db_connection.commit()
+
+        channels.publish(  # pyright: ignore[reportUnknownMemberType]
+            {
+                "t": "CONVERSATION_CREATE",
+                "d": {**msgspec.to_builtins(conversation), "newly_created": True},
+            },
+            [f"gateway_user_{p.user.id}" for p in conversation.participants],
+        )
+
         return conversation
 
     @patch(
@@ -154,7 +165,12 @@ class ConversationsController(Controller):
         data: ConversationUpdate,
         current_user: User,
         conversations_repository: ConversationsRepository,
+        db_connection: aiosqlite.Connection,
+        channels: ChannelsPlugin,
     ) -> Conversation:
+        if data.name is msgspec.UNSET and data.description is msgspec.UNSET:
+            raise ClientException("no update fields specified")
+
         conversation = await conversations_repository.get(
             conversation_id, current_user.id
         )
@@ -165,9 +181,10 @@ class ConversationsController(Controller):
         if conversation.type == "direct":
             raise ClientException("cannot customize direct conversation")
 
-        participant = next(
-            p for p in conversation.participants if p.user.id == current_user.id
-        )
+        # we make a copy here because ConversationRepository.update does not return
+        # a list of participants
+        participants = conversation.participants
+        participant = next(p for p in participants if p.user.id == current_user.id)
 
         if participant.role != "admin":
             raise PermissionDeniedException("only admins can customize conversation")
@@ -180,6 +197,13 @@ class ConversationsController(Controller):
 
         if conversation is None:
             raise InternalServerException
+
+        await db_connection.commit()
+
+        channels.publish(  # pyright: ignore[reportUnknownMemberType]
+            {"t": "CONVERSATION_UPDATE", "d": msgspec.to_builtins(conversation)},
+            [f"gateway_user_{p.user.id}" for p in participants],
+        )
 
         return conversation
 
@@ -196,6 +220,7 @@ class ConversationsController(Controller):
         current_user: User,
         conversations_repository: ConversationsRepository,
         db_connection: aiosqlite.Connection,
+        channels: ChannelsPlugin,
     ) -> Conversation:
         conversation = await conversations_repository.get(
             conversation_id, current_user.id
@@ -215,6 +240,12 @@ class ConversationsController(Controller):
             raise PermissionDeniedException
 
         _ = await conversations_repository.delete(conversation_id)
+
         await db_connection.commit()
+
+        channels.publish(  # pyright: ignore[reportUnknownMemberType]
+            {"t": "CONVERSATION_DELETE", "d": {"id": conversation.id}},
+            [f"gateway_user_{p.user.id}" for p in conversation.participants],
+        )
 
         return conversation
