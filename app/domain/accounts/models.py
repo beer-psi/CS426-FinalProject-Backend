@@ -6,13 +6,16 @@ from msgspec import Struct
 class UserPublic(Struct):
     id: int
     name: str
-    email: str | None
-    phone_number: str | None
     created_at: datetime
     updated_at: datetime
 
 
-class User(UserPublic):
+class UserProtected(UserPublic):
+    email: str | None
+    phone_number: str | None
+
+
+class User(UserProtected):
     hashed_password: str
 
 

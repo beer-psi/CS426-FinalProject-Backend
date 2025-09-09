@@ -271,6 +271,7 @@ dev = [
     { name = "basedpyright", specifier = ">=1.31.3" },
     { name = "ruff", specifier = ">=0.12.11" },
 ]
+test = []
 
 [[package]]
 name = "h11"

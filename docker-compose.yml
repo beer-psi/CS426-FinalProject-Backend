@@ -1,0 +1,26 @@
+services:
+  server:
+    build:
+      dockerfile: "."
+    volumes:
+      - "studymate-data:/app/data"
+    expose:
+      - "8000"
+    env_file: ".env" # SECRET_KEY, GOOGLE_OAUTH2_CLIENT_ID, GOOGLE_OAUTH2_CLIENT_SECRET
+
+  tunnel:
+    image: "cloudflare/cloudflared:latest"
+    command: "tunnel --post-quantum --no-autoupdate run"
+    restart: "unless-stopped"
+    links:
+      - "server"
+    deploy:
+      resources:
+        limits:
+          memory: "40MB"
+    env_file: ".env" # TUNNEL_TOKEN
+    environment:
+      TUNNEL_TRANSPORT_PROTOCOL: "quic"
+
+volumes:
+  studymate-data:

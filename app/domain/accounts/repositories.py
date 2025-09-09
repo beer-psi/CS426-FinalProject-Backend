@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, override
 
 from app.database import queries
 
-from .models import DeniedToken, OAuth2Account, User, UserPublic
+from .models import DeniedToken, OAuth2Account, User, UserProtected
 
 if TYPE_CHECKING:
     import aiosqlite
@@ -154,7 +154,7 @@ class OAuth2AccountRepositoryImpl(OAuth2AccountRepository):
             access_token=row["oauth2_access_token"],
             refresh_token=row["oauth2_refresh_token"],
             expires_at=row["oauth2_expires_at"],
-            user=UserPublic(
+            user=UserProtected(
                 id=row["user_id"],
                 name=row["user_name"],
                 email=row["user_email"],

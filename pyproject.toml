@@ -21,3 +21,4 @@ dev = [
     "basedpyright>=1.31.3",
     "ruff>=0.12.11",
 ]
+test = []

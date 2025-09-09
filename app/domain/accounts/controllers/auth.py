@@ -12,7 +12,7 @@ from app.domain.accounts.dependencies import (
     provide_user_repository,
 )
 from app.domain.accounts.guards import auth
-from app.domain.accounts.models import User, UserPublic
+from app.domain.accounts.models import User, UserProtected
 from app.domain.accounts.repositories import TokenDenylistRepository, UserRepository
 from app.domain.accounts.schemas import AccountLogin, AccountRegister
 from app.lib.crypt import hash_password, verify_password
@@ -80,7 +80,7 @@ class AuthController(Controller):
         data: AccountRegister,
         user_repository: UserRepository,
         db_connection: aiosqlite.Connection,
-    ) -> UserPublic:
+    ) -> UserProtected:
         if not data.email and not data.phone_number:
             raise ClientException("both email and phone number cannot be empty")
 
@@ -105,7 +105,7 @@ class AuthController(Controller):
         )
         await db_connection.commit()
 
-        return UserPublic(
+        return UserProtected(
             id=user.id,
             name=user.name,
             email=user.email,
@@ -117,8 +117,8 @@ class AuthController(Controller):
     @get(
         urls.ACCOUNT_PROFILE, operation_id="AccountProfile", summary="Get user profile"
     )
-    async def profile(self, request: Request[User, Any, Any]) -> UserPublic:  # pyright: ignore[reportExplicitAny]
-        return UserPublic(
+    async def profile(self, request: Request[User, Any, Any]) -> UserProtected:  # pyright: ignore[reportExplicitAny]
+        return UserProtected(
             id=request.user.id,
             name=request.user.name,
             email=request.user.email,
