@@ -1,7 +1,6 @@
 services:
   server:
-    build:
-      dockerfile: "."
+    build: "."
     volumes:
       - "studymate-data:/app/data"
     expose:
