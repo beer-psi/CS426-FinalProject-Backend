@@ -11,7 +11,7 @@ class GatewayController(Controller):
         self,
         socket: WebSocket[User, object, State],
         channels: ChannelsPlugin,
-    ):
+    ) -> None:
         await socket.accept()
 
         async with channels.start_subscription(

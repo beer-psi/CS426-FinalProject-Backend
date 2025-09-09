@@ -9,6 +9,7 @@ from litestar.exceptions import (
     NotFoundException,
     PermissionDeniedException,
 )
+from litestar.status_codes import HTTP_200_OK
 import msgspec
 
 from app.domain.accounts.dependencies import provide_user_repository
@@ -115,6 +116,7 @@ class ConversationParticipantsController(Controller):
         urls.REMOVE_USER_FROM_CONVERSATION,
         operation_id="RemoveUserFromConversation",
         summary="Remove user from conversation",
+        status_code=HTTP_200_OK,
     )
     async def remove_user_from_conversation(
         self,
@@ -180,6 +182,7 @@ class ConversationParticipantsController(Controller):
         urls.REMOVE_SELF_FROM_CONVERSATION,
         operation_id="LeaveConversation",
         summary="Leave conversation",
+        status_code=HTTP_200_OK,
     )
     async def leave_conversation(
         self,
