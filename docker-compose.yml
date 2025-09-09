@@ -11,7 +11,7 @@ services:
         "--proxy-headers",
         "--no-server-header",
         "--forwarded-allow-ips",
-        "172.16.0.0/16",
+        "*",
         "app.asgi:app",
       ]
     volumes:
