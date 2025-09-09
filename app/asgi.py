@@ -5,10 +5,14 @@ def create_app() -> "Litestar":
     import tomllib
     from pathlib import Path
 
+    from litestar.channels import ChannelsPlugin
+    from litestar.channels.backends.memory import MemoryChannelsBackend
+    from litestar.di import Provide
     from litestar.openapi.config import OpenAPIConfig
     from litestar.openapi.plugins import JsonRenderPlugin, RedocRenderPlugin
 
     from .config import sqlite
+    from .domain.accounts.dependencies import provide_current_user
     from .domain.accounts.guards import auth
     from .server import routers
     from .server.plugins import MigratorCLIPlugin
@@ -20,6 +24,9 @@ def create_app() -> "Litestar":
 
     return Litestar(
         routers.route_handlers,
+        dependencies={
+            "current_user": Provide(provide_current_user, sync_to_thread=False),
+        },
         on_app_init=[auth.on_app_init],
         openapi_config=OpenAPIConfig(
             title=pyproject["project"]["name"],  # pyright: ignore[reportAny]
@@ -31,6 +38,9 @@ def create_app() -> "Litestar":
             ],
         ),
         plugins=[
+            ChannelsPlugin(
+                MemoryChannelsBackend(), channels=["messages", "conversations"]
+            ),
             MigratorCLIPlugin(),
             SQLitePoolPlugin(sqlite),
         ],

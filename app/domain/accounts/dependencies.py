@@ -1,4 +1,8 @@
 import aiosqlite
+from litestar import Request
+from litestar.datastructures import State
+
+from app.domain.accounts.models import User
 
 from .repositories import (
     OAuth2AccountRepository,
@@ -8,6 +12,10 @@ from .repositories import (
     UserRepository,
     UserRepositoryImpl,
 )
+
+
+def provide_current_user(request: Request[User, object, State]) -> User:
+    return request.user
 
 
 def provide_user_repository(db_connection: aiosqlite.Connection) -> UserRepository:

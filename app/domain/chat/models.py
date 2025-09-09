@@ -3,6 +3,8 @@ from typing import Literal
 
 from msgspec import Struct
 
+from app.domain.accounts.models import UserPublic
+
 
 class MessageAttachment(Struct):
     id: int
@@ -25,6 +27,12 @@ class Message(Struct):
     attachments: list[MessageAttachment]
 
 
+class ConversationParticipant(Struct):
+    user: UserPublic
+    role: Literal["admin", "user"]
+    joined_at: datetime
+
+
 class Conversation(Struct):
     id: int
     type: Literal["direct", "group"]
@@ -32,4 +40,4 @@ class Conversation(Struct):
     description: str | None
     created_at: datetime
     updated_at: datetime
-    participants: list[UserPublic]
+    participants: list[ConversationParticipant]
