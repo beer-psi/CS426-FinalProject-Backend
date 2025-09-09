@@ -115,6 +115,13 @@ class ChatQueries(aiosql.queries.Queries):
         added_by_user_id: int,
         role: str,
     ) -> "aiosqlite.Row": ...
+    async def delete_conversation_participant(
+        self,
+        connection: "aiosqlite.Connection",
+        *,
+        conversation_id: int,
+        user_id: int,
+    ) -> int: ...
 
 class Queries(aiosql.queries.Queries):
     user: UserQueries

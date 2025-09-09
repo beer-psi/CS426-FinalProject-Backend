@@ -1,6 +1,7 @@
 from typing import Annotated, final
 
 import aiosqlite
+import msgspec
 from litestar import Controller, delete, get, patch, post
 from litestar.di import Provide
 from litestar.exceptions import (
@@ -11,7 +12,6 @@ from litestar.exceptions import (
 )
 from litestar.params import Parameter
 from litestar.status_codes import HTTP_200_OK
-import msgspec
 
 from app.domain.accounts.dependencies import provide_user_repository
 from app.domain.accounts.models import User

@@ -1,4 +1,5 @@
 from typing import final
+
 from litestar import Controller, get
 
 from app.domain.chat import urls

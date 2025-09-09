@@ -40,4 +40,5 @@ class Conversation(Struct):
     description: str | None
     created_at: datetime
     updated_at: datetime
+    require_member_approval: bool
     participants: list[ConversationParticipant]

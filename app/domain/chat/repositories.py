@@ -8,7 +8,6 @@ from app.lib.utils import MISSING
 
 from .models import Conversation, ConversationParticipant
 
-
 if TYPE_CHECKING:
     import aiosqlite
 
@@ -76,6 +75,9 @@ class ConversationParticipantsRepository(ABC):
         role: Literal["admin", "user"],
     ) -> ConversationParticipant: ...
 
+    @abstractmethod
+    async def delete(self, conversation_id: int, user_id: int): ...
+
 
 class MessagesRepository(ABC):
     pass
@@ -109,6 +111,7 @@ class ConversationsRepositoryImpl(ConversationsRepository):
             description=conversation_row["description"],
             created_at=conversation_row["created_at"],
             updated_at=conversation_row["updated_at"],
+            require_member_approval=conversation_row["require_member_approval"],
             participants=[
                 ConversationParticipant(
                     user=UserPublic(
@@ -160,6 +163,7 @@ class ConversationsRepositoryImpl(ConversationsRepository):
                         description=row["description"],
                         created_at=row["created_at"],
                         updated_at=row["updated_at"],
+                        require_member_approval=row["require_member_approval"],
                         participants=participants,
                     )
                 )
@@ -186,6 +190,7 @@ class ConversationsRepositoryImpl(ConversationsRepository):
             type=conversation_row["type"],
             name=conversation_row["name"],
             description=conversation_row["description"],
+            require_member_approval=conversation_row["require_member_approval"],
             created_at=conversation_row["created_at"],
             updated_at=conversation_row["updated_at"],
             participants=[
@@ -221,6 +226,7 @@ class ConversationsRepositoryImpl(ConversationsRepository):
             description=row["description"],
             created_at=row["created_at"],
             updated_at=row["updated_at"],
+            require_member_approval=row["require_member_approval"],
             participants=[],
         )
 
@@ -258,6 +264,7 @@ class ConversationsRepositoryImpl(ConversationsRepository):
             type=result["type"],
             name=result["name"],
             description=result["description"],
+            require_member_approval=result["require_member_approval"],
             created_at=result["created_at"],
             updated_at=result["updated_at"],
             participants=[],
@@ -277,6 +284,7 @@ class ConversationsRepositoryImpl(ConversationsRepository):
             type=row["type"],
             name=row["name"],
             description=row["description"],
+            require_member_approval=row["require_member_approval"],
             created_at=row["created_at"],
             updated_at=row["updated_at"],
             participants=[],
@@ -312,4 +320,10 @@ class ConversationParticipantsRepositoryImpl(ConversationParticipantsRepository)
             ),
             role=row["participant_role"],
             joined_at=row["participant_created_at"],
+        )
+
+    @override
+    async def delete(self, conversation_id: int, user_id: int):
+        _ = await queries.chat.delete_conversation_participant(
+            self.connection, conversation_id=conversation_id, user_id=user_id
         )
