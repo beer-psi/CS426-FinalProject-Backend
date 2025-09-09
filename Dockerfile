@@ -32,6 +32,10 @@ ENV LD_PRELOAD="/usr/lib/libmimalloc.so.2"
 
 USER app
 
-WORKDIR /app
+# Docker volumes are mounted as root UNLESS the folder already exists inside the container
+# and has non-root ownership.
+RUN mkdir /app/data
 VOLUME /app/data
+
+WORKDIR /app
 ENTRYPOINT ["/app/.venv/bin/litestar", "run", "--host", "0.0.0.0"]
