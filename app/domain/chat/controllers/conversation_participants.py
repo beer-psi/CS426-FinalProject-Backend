@@ -161,7 +161,7 @@ class ConversationParticipantsController(Controller):
         )
         channels.publish(  # pyright: ignore[reportUnknownMemberType]
             {
-                "t": "CONVERSATION_MEMBERS_UPDATE",
+                "t": "CONVERSATION_PARTICIPANTS_UPDATE",
                 "d": {
                     "id": conversation.id,
                     "participant_count": len(conversation.participants) - 1,
@@ -218,7 +218,7 @@ class ConversationParticipantsController(Controller):
         )
         channels.publish(  # pyright: ignore[reportUnknownMemberType]
             {
-                "t": "CONVERSATION_MEMBERS_UPDATE",
+                "t": "CONVERSATION_PARTICIPANTS_UPDATE",
                 "d": {
                     "id": conversation.id,
                     "participant_count": len(conversation.participants) - 1,
