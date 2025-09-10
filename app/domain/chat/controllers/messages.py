@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Annotated, final
 
 import aiosqlite
+import msgspec
 from litestar import Controller, delete, get, post
 from litestar.channels import ChannelsPlugin
 from litestar.di import Provide
@@ -13,7 +14,6 @@ from litestar.exceptions import (
 )
 from litestar.params import Body, Parameter
 from litestar.status_codes import HTTP_200_OK
-import msgspec
 
 from app.domain.accounts.models import User
 from app.domain.chat import urls

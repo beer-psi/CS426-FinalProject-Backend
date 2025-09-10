@@ -1,10 +1,11 @@
 from typing import final
 
 import aiosqlite
+import msgspec
 from litestar import Controller, delete, get, patch, post
 from litestar.di import Provide
 from litestar.exceptions import InternalServerException, NotFoundException
-import msgspec
+from litestar.status_codes import HTTP_200_OK
 
 from app.domain.accounts.models import User
 from app.domain.quizzes import urls
@@ -45,7 +46,7 @@ class QuizQuestionsController(Controller):
         quizzes_repository: QuizzesRepository,
         quiz_questions_repository: QuizQuestionsRepository,
         db_connection: aiosqlite.Connection,
-    ):
+    ) -> QuizQuestion:
         quiz = await quizzes_repository.get(current_user.id, quiz_id)
 
         if quiz is None:
@@ -123,6 +124,7 @@ class QuizQuestionsController(Controller):
         operation_id="DeleteQuizQuestion",
         summary="Delete quiz question",
         raises=[NotFoundException],
+        status_code=HTTP_200_OK,
     )
     async def delete_quiz_question(
         self,

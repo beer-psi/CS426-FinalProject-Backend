@@ -1,6 +1,7 @@
 from typing import final
 
 import aiosqlite
+import msgspec
 from litestar import Controller, delete, put
 from litestar.channels import ChannelsPlugin
 from litestar.di import Provide
@@ -10,7 +11,6 @@ from litestar.exceptions import (
     PermissionDeniedException,
 )
 from litestar.status_codes import HTTP_200_OK
-import msgspec
 
 from app.domain.accounts.dependencies import provide_user_repository
 from app.domain.accounts.models import User

@@ -2,6 +2,7 @@ import base64
 from typing import Annotated, final
 
 import aiosqlite
+import msgspec
 from litestar import Controller, Router, delete, get, patch, post
 from litestar.datastructures import UploadFile
 from litestar.di import Provide
@@ -13,11 +14,11 @@ from litestar.exceptions import (
     NotFoundException,
 )
 from litestar.params import Body
-import msgspec
+from litestar.status_codes import HTTP_200_OK
 from openai import AsyncOpenAI
 from openai.types.shared_params.response_format_json_schema import (
-    ResponseFormatJSONSchema,
     JSONSchema,
+    ResponseFormatJSONSchema,
 )
 
 from app.config.base import settings
@@ -28,7 +29,7 @@ from app.domain.quizzes.dependencies import (
     provide_quizzes_repository,
 )
 from app.domain.quizzes.models import Quiz, QuizCreate, QuizQuestionCreate, QuizUpdate
-from app.domain.quizzes.repositories import QuizzesRepository, QuizQuestionsRepository
+from app.domain.quizzes.repositories import QuizQuestionsRepository, QuizzesRepository
 
 
 class AIQuiz(msgspec.Struct):
@@ -254,6 +255,7 @@ class QuizzesController(Controller):
         operation_id="DeleteQuiz",
         summary="Delete quiz",
         raises=[NotFoundException],
+        status_code=HTTP_200_OK,
     )
     async def delete_quiz(
         self,
