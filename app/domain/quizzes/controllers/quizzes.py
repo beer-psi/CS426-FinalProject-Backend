@@ -1,4 +1,5 @@
 import base64
+import json
 from typing import Annotated, final
 
 import aiosqlite
@@ -186,7 +187,8 @@ class QuizzesController(Controller):
                 detail="There was an error generating the quiz"
             )
 
-        quiz_data = msgspec.json.decode(completion_content, type=AIQuiz)
+        quiz_data = msgspec.convert(json.loads(completion_content), type=AIQuiz)
+        # quiz_data = msgspec.json.decode(completion_content, type=AIQuiz)
         quiz = await quizzes_repository.insert(current_user.id, quiz_data.title)
         quiz.questions = []
 
