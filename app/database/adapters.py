@@ -4,16 +4,11 @@ import aiosqlite
 
 
 def adapt_datetime(val: datetime) -> str:
-    return val.strftime("%Y-%m-%d %H:%M:%S")
+    return val.astimezone(UTC).strftime("%Y-%m-%d %H:%M:%S")
 
 
 def convert_datetime(val: bytes) -> datetime:
-    dt = datetime.fromisoformat(val.decode())
-
-    if dt.tzinfo is None:
-        return dt.replace(tzinfo=UTC)
-
-    return dt
+    return datetime.fromisoformat(val.decode()).replace(tzinfo=UTC)
 
 
 def register_adapters():
