@@ -16,6 +16,9 @@ class AppSettings:
     GOOGLE_OAUTH2_CLIENT_SECRET: str | None = field(
         default_factory=lambda: os.environ.get("GOOGLE_OAUTH2_CLIENT_SECRET")
     )
+    OPENROUTER_API_KEY: str | None = field(
+        default_factory=lambda: os.environ.get("OPENROUTER_API_KEY")
+    )
 
 
 @dataclass

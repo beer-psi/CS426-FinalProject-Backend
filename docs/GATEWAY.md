@@ -31,6 +31,11 @@ The data is a conversation object.
 - When the user gets added to a conversation, includes a conversation participant object under
 the `participant` key.
 
+Fired when:
+- calling `POST /api/v1/users/me/conversations` to create a new conversation
+- calling `PUT /api/v1/conversations/{conversation_id}/participants/{user_id}` to add a new user to the conversation
+(only the added user receives the event)
+
 ```json
 {
     "t": "CONVERSATION_CREATE",
@@ -52,6 +57,8 @@ the `participant` key.
 ### Conversation Update
 
 Sent when a conversation is updated (name or description changed). The data is the updated conversation object.
+
+Fired when calling `PATCH /api/v1/conversations/{conversation_id}` to edit a conversation's settings.
 
 ```json
 {
@@ -75,6 +82,11 @@ Sent when a conversation is updated (name or description changed). The data is t
 
 Sent when a conversation is deleted, or the current user was removed from the conversation. The data is the conversation ID.
 
+Fired when:
+- calling `DELETE /api/v1/conversations/{conversation_id}` to delete the conversation
+- calling `DELETE /api/v1/conversations/{conversation_id}/participants/{user_id}` to remove a user from the conversation
+(only the removed user receives the event)
+
 ```json
 {
     "t": "CONVERSATION_DELETE",
@@ -88,6 +100,10 @@ Sent when a conversation is deleted, or the current user was removed from the co
 
 Sent when anyone is added or removed from a conversation. Added participants are full conversation participant objects,
 while only the IDs of removed participants are sent.
+
+Fired when (only people currently in the conversation receive the event):
+- calling `PUT /api/v1/conversations/{conversation_id}/participants/{user_id}` to add a new user to the conversation
+- calling `DELETE /api/v1/conversations/{conversation_id}/participants/{user_id}` to remove a user from the conversation
 
 ```json
 {
@@ -104,6 +120,8 @@ while only the IDs of removed participants are sent.
 ### Message Create
 
 Sent when a message is created. The data is the newly created message object.
+
+Fired when calling `POST /api/v1/conversations/{conversation_id}/messages` to create a message.
 
 ```json
 {
@@ -126,11 +144,30 @@ Sent when a message is created. The data is the newly created message object.
 
 Sent when a message is deleted. The data is the deleted message ID.
 
+Fired when calling `DELETE /api/v1/conversations/{conversation_id}/messages/{message_id}` to delete a message.
+
 ```json
 {
     "t": "MESSAGE_DELETE",
     "d": {
         "id": 0
+    }
+}
+```
+
+### Typing Start
+
+Sent when a user starts typing in a conversation.
+
+Fired when calling `POST /api/v1/conversations/{conversation_id}/typing`.
+
+```json
+{
+    "t": "TYPING_START",
+    "d": {
+        "conversation_id": 0,
+        "user_id": 0,
+        "timestamp": 0
     }
 }
 ```

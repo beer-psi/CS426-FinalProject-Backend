@@ -10,6 +10,8 @@ GET_MESSAGES = "/api/v1/conversations/{conversation_id:int}/messages"
 UPDATE_MESSAGE = "/api/v1/conversations/{conversation_id:int}/messages/{message_id:int}"
 DELETE_MESSAGE = "/api/v1/conversations/{conversation_id:int}/messages/{message_id:int}"
 
+START_TYPING = "/api/v1/conversations/{conversation_id:int}/typing"
+
 ADD_USER_TO_CONVERSATION = (
     "/api/v1/conversations/{conversation_id:int}/participants/{user_id:int}"
 )

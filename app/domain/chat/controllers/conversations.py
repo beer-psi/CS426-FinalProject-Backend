@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 from typing import Annotated, final
 
 import aiosqlite
@@ -12,7 +13,7 @@ from litestar.exceptions import (
     PermissionDeniedException,
 )
 from litestar.params import Parameter
-from litestar.status_codes import HTTP_200_OK
+from litestar.status_codes import HTTP_200_OK, HTTP_204_NO_CONTENT
 
 from app.domain.accounts.dependencies import provide_user_repository
 from app.domain.accounts.models import User
@@ -249,3 +250,36 @@ class ConversationsController(Controller):
         )
 
         return conversation
+
+    @post(
+        urls.START_TYPING,
+        operation_id="StartTyping",
+        summary="Send typing indicator",
+        raises=[NotFoundException],
+        status_code=HTTP_204_NO_CONTENT,
+    )
+    async def start_typing(
+        self,
+        conversation_id: int,
+        current_user: User,
+        conversations_repository: ConversationsRepository,
+        channels: ChannelsPlugin,
+    ) -> None:
+        conversation = await conversations_repository.get(
+            conversation_id, current_user.id
+        )
+
+        if conversation is None:
+            raise NotFoundException
+
+        channels.publish(  # pyright: ignore[reportUnknownMemberType]
+            {
+                "t": "TYPING_START",
+                "d": {
+                    "conversation_id": conversation_id,
+                    "user_id": current_user.id,
+                    "timestamp": datetime.now(UTC).timestamp(),
+                },
+            },
+            [f"gateway_user_{p.user.id}" for p in conversation.participants],
+        )
