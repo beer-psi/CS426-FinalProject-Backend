@@ -83,7 +83,7 @@ def configure_connection(conn: sqlite3.Connection):
     with contextlib.closing(conn.cursor()) as cursor:
         _ = cursor.execute("PRAGMA journal_mode=WAL")
         _ = cursor.execute("PRAGMA synchronous=NORMAL")
-        _ = cursor.execute("PRAGMA foreign_keys=ON")
+        _ = cursor.execute("PRAGMA foreign_keys=OFF")
         _ = cursor.execute("PRAGMA busy_timeout=100")
         _ = cursor.execute("PRAGMA recursive_triggers=ON")
 
