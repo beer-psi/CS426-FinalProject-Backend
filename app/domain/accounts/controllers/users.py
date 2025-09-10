@@ -21,6 +21,7 @@ class UsersController(Controller):
         urls.GET_USER_BY_USERNAME,
         operation_id="GetUserByUsername",
         summary="Get user by email or phone number",
+        raises=[NotFoundException],
     )
     async def get_user_by_username(
         self, username: str, users_repository: UserRepository
