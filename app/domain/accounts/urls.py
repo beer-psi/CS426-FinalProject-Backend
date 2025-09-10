@@ -7,3 +7,5 @@ ACCOUNT_OAUTH_LOGIN = "/api/v1/oauth/{provider:str}/login"
 ACCOUNT_OAUTH_AUTHORIZE = "/api/v1/oauth/{provider:str}/authorize"
 
 ACCOUNT_PROFILE = "/api/v1/users/me"
+
+GET_USER_BY_USERNAME = "/api/v1/users/{username:str}"

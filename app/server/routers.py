@@ -1,6 +1,10 @@
 from typing import TYPE_CHECKING
 
-from app.domain.accounts.controllers import AuthController, OAuthController
+from app.domain.accounts.controllers import (
+    AuthController,
+    OAuthController,
+    UsersController,
+)
 from app.domain.chat.controllers import (
     AttachmentsController,
     ConversationParticipantsController,
@@ -15,6 +19,7 @@ if TYPE_CHECKING:
 route_handlers: "list[ControllerRouterHandler]" = [
     AuthController,
     OAuthController,
+    UsersController,
     AttachmentsController,
     ConversationsController,
     ConversationParticipantsController,
