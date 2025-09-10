@@ -68,13 +68,18 @@ class ConversationsRepository(ABC):
 
 class ConversationParticipantsRepository(ABC):
     @abstractmethod
+    async def get(
+        self, conversation_id: int, user_id: int
+    ) -> ConversationParticipant | None: ...
+
+    @abstractmethod
     async def insert(
         self,
         conversation_id: int,
         user_id: int,
         added_by_user_id: int,
         role: Literal["admin", "user"],
-    ) -> ConversationParticipant: ...
+    ) -> None: ...
 
     @abstractmethod
     async def delete(self, conversation_id: int, user_id: int): ...
@@ -333,20 +338,15 @@ class ConversationParticipantsRepositoryImpl(ConversationParticipantsRepository)
         self.connection: "aiosqlite.Connection" = connection
 
     @override
-    async def insert(
-        self,
-        conversation_id: int,
-        user_id: int,
-        added_by_user_id: int,
-        role: Literal["admin", "user"],
-    ) -> ConversationParticipant:
-        row = await queries.chat.insert_conversation_participant(
-            self.connection,
-            conversation_id=conversation_id,
-            user_id=user_id,
-            added_by_user_id=added_by_user_id,
-            role=role,
+    async def get(
+        self, conversation_id: int, user_id: int
+    ) -> ConversationParticipant | None:
+        row = await queries.chat.get_conversation_participant(
+            self.connection, conversation_id=conversation_id, user_id=user_id
         )
+
+        if row is None:
+            return None
 
         return ConversationParticipant(
             user=UserPublic(
@@ -357,6 +357,22 @@ class ConversationParticipantsRepositoryImpl(ConversationParticipantsRepository)
             ),
             role=row["participant_role"],
             joined_at=row["participant_created_at"],
+        )
+
+    @override
+    async def insert(
+        self,
+        conversation_id: int,
+        user_id: int,
+        added_by_user_id: int,
+        role: Literal["admin", "user"],
+    ) -> None:
+        _ = await queries.chat.insert_conversation_participant(
+            self.connection,
+            conversation_id=conversation_id,
+            user_id=user_id,
+            added_by_user_id=added_by_user_id,
+            role=role,
         )
 
     @override

@@ -106,6 +106,13 @@ class ChatQueries(aiosql.queries.Queries):
     async def get_conversation_participants(
         self, connection: "aiosqlite.Connection", *, conversation_id: int
     ) -> list["aiosqlite.Row"]: ...
+    async def get_conversation_participant(
+        self,
+        connection: "aiosqlite.Connection",
+        *,
+        conversation_id: int,
+        user_id: int,
+    ) -> "aiosqlite.Row | None": ...
     async def insert_conversation_participant(
         self,
         connection: "aiosqlite.Connection",
@@ -114,7 +121,7 @@ class ChatQueries(aiosql.queries.Queries):
         user_id: int,
         added_by_user_id: int,
         role: str,
-    ) -> "aiosqlite.Row": ...
+    ) -> int: ...
     async def delete_conversation_participant(
         self,
         connection: "aiosqlite.Connection",

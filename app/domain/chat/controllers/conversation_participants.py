@@ -7,6 +7,7 @@ from litestar.channels import ChannelsPlugin
 from litestar.di import Provide
 from litestar.exceptions import (
     ClientException,
+    InternalServerException,
     NotFoundException,
     PermissionDeniedException,
 )
@@ -80,9 +81,15 @@ class ConversationParticipantsController(Controller):
             # TODO: handle, this should add the user to the approval queue
             pass
 
-        participant = await conversation_participants_repository.insert(
+        await conversation_participants_repository.insert(
             conversation_id, user_id, current_user.id, "user"
         )
+        participant = await conversation_participants_repository.get(
+            conversation_id, user_id
+        )
+
+        if participant is None:
+            raise InternalServerException
 
         conversation.participants.append(participant)
         await db_connection.commit()

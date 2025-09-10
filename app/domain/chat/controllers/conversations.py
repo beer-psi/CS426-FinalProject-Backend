@@ -114,16 +114,26 @@ class ConversationsController(Controller):
                 return conversation
 
             conversation = await conversations_repository.insert("direct")
-            conversation.participants.append(
-                await conversation_participants_repository.insert(
-                    conversation.id, current_user.id, current_user.id, "admin"
-                )
+
+            await conversation_participants_repository.insert(
+                conversation.id, current_user.id, current_user.id, "admin"
             )
-            conversation.participants.append(
-                await conversation_participants_repository.insert(
-                    conversation.id, data.recipient_id, current_user.id, "admin"
-                )
+            await conversation_participants_repository.insert(
+                conversation.id, data.recipient_id, current_user.id, "admin"
             )
+
+            participant1 = await conversation_participants_repository.get(
+                conversation.id, current_user.id
+            )
+            participant2 = await conversation_participants_repository.get(
+                conversation.id, data.recipient_id
+            )
+
+            if participant1 is None or participant2 is None:
+                raise InternalServerException
+
+            conversation.participants.append(participant1)
+            conversation.participants.append(participant2)
         else:
             conversation = await conversations_repository.insert(
                 "group",
@@ -136,11 +146,14 @@ class ConversationsController(Controller):
                     await db_connection.rollback()
                     raise NotFoundException
 
-                conversation.participants.append(
-                    await conversation_participants_repository.insert(
-                        conversation.id, recipient_id, current_user.id, "user"
-                    )
+                participant = await conversation_participants_repository.get(
+                    conversation.id, recipient_id
                 )
+
+                if participant is None:
+                    raise InternalServerException
+
+                conversation.participants.append(participant)
 
         await db_connection.commit()
 
