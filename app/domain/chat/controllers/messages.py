@@ -89,6 +89,9 @@ class MessagesController(Controller):
         db_connection: aiosqlite.Connection,
         channels: ChannelsPlugin,
     ) -> Message:
+        if data.content is None and not data.attachments:
+            raise ClientException("cannot send empty message")
+
         conversation = await conversations_repository.get(
             conversation_id, current_user.id
         )
