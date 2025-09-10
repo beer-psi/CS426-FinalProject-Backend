@@ -17,7 +17,7 @@ SELECT
     qq.created_at AS quiz_question_created_at,
     qq.updated_at AS quiz_question_updated_at
 FROM quizzes q
-LEFT JOIN quiz_questions qq ON q.id = qq.question_id
+LEFT JOIN quiz_questions qq ON q.id = qq.quiz_id
 WHERE q.user_id = :user_id AND q.id = :id;
 
 -- name: list_quizzes_with_questions_by_user(user_id)
@@ -35,7 +35,7 @@ SELECT
     qq.created_at AS quiz_question_created_at,
     qq.updated_at AS quiz_question_updated_at
 FROM quizzes q
-LEFT JOIN quiz_questions qq ON q.id = qq.question_id
+LEFT JOIN quiz_questions qq ON q.id = qq.quiz_id
 WHERE q.user_id = :user_id;
 
 -- name: update_quiz_title(id, title)^
