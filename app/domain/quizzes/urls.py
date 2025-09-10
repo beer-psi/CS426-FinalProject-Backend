@@ -1,0 +1,11 @@
+CREATE_QUIZ = "/api/v1/users/me/quizzes"
+CREATE_QUIZ_FROM_FILE = "/api/v1/users/me/quizzes/from-file"
+GET_OWN_QUIZZES = "/api/v1/users/me/quizzes"
+GET_QUIZ = "/api/v1/quizzes/{quiz_id:int}"
+UPDATE_QUIZ = "/api/v1/quizzes/{quiz_id:int}"
+DELETE_QUIZ = "/api/v1/quizzes/{quiz_id:int}"
+
+CREATE_QUIZ_QUESTION = "/api/v1/quizzes/{quiz_id:int}/questions"
+GET_QUIZ_QUESTIONS = "/api/v1/quizzes/{quiz_id:int}/questions"
+UPDATE_QUIZ_QUESTION = "/api/v1/quizzes/{quiz_id:int}/questions/{question_id:int}"
+DELETE_QUIZ_QUESTION = "/api/v1/quizzes/{quiz_id:int}/questions/{question_id:int}"

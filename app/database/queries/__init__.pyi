@@ -186,10 +186,57 @@ class ChatQueries(aiosql.queries.Queries):
         id: int,
     ) -> int: ...
 
+class QuizQueries(aiosql.queries.Queries):
+    async def insert_quiz(
+        self, connection: "aiosqlite.Connection", *, user_id: int, title: str | None
+    ) -> "aiosqlite.Row": ...
+    async def get_quiz_with_questions(
+        self, connection: "aiosqlite.Connection", *, user_id: int, id: int
+    ) -> list["aiosqlite.Row"]: ...
+    async def list_quizzes_with_questions_by_user(
+        self, connection: "aiosqlite.Connection", *, user_id: int
+    ) -> list["aiosqlite.Row"]: ...
+    async def update_quiz_title(
+        self,
+        connection: "aiosqlite.Connection",
+        *,
+        id: int,
+        title: str | None,
+    ) -> "aiosqlite.Row | None": ...
+    async def delete_quiz(
+        self,
+        connection: "aiosqlite.Connection",
+        *,
+        id: int,
+    ) -> "aiosqlite.Row | None": ...
+    async def insert_quiz_question(
+        self,
+        connection: "aiosqlite.Connection",
+        *,
+        quiz_id: int,
+        question: str,
+        answer: str,
+        explanation: str | None,
+    ) -> "aiosqlite.Row": ...
+    async def list_questions_in_quiz(
+        self,
+        connection: "aiosqlite.Connection",
+        *,
+        quiz_id: int,
+    ) -> list["aiosqlite.Row"]: ...
+    async def delete_quiz_question(
+        self,
+        connection: "aiosqlite.Connection",
+        *,
+        quiz_id: int,
+        id: int,
+    ) -> "aiosqlite.Row | None": ...
+
 class Queries(aiosql.queries.Queries):
     user: UserQueries
     oauth2_account: OAuth2AccountQueries
     token_denylist: TokenDenylistQueries
     chat: ChatQueries
+    quiz: QuizQueries
 
 queries: Queries

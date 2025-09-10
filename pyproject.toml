@@ -11,6 +11,7 @@ dependencies = [
     "argon2-cffi>=25.1.0",
     "httpx-oauth>=0.16.1",
     "litestar[jwt]>=2.17.0",
+    "openai>=1.107.0",
     "pyjwt>=2.9.0",
     "python-dotenv>=1.1.1",
     "uvicorn>=0.35.0",

@@ -399,7 +399,9 @@ class MessagesRepositoryImpl(MessagesRepository):
                     file_size=row["message_attachment_file_size"],
                 )
                 for row in rows
-            ],
+            ]
+            if row["message_attachment_id"] is not None
+            else [],
         )
 
     @override
@@ -468,7 +470,9 @@ class MessagesRepositoryImpl(MessagesRepository):
                         file_size=row["message_attachment_file_size"],
                     )
                     for row in rows
-                ],
+                ]
+                if row["message_attachment_id"] is not None
+                else [],
             )
 
             result.append(message)

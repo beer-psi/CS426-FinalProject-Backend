@@ -1,0 +1,2 @@
+from .quiz_questions import QuizQuestionsController as QuizQuestionsController
+from .quizzes import QuizzesController as QuizzesController
