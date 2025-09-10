@@ -39,7 +39,7 @@ class AIQuiz(msgspec.Struct):
 
 @final
 class QuizzesController(Controller):
-    tag = ["Quiz"]
+    tags = ["Quiz"]
     dependencies = {
         "quizzes_repository": Provide(provide_quizzes_repository, sync_to_thread=False),
         "quiz_questions_repository": Provide(
