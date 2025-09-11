@@ -1,6 +1,6 @@
 import os
 from datetime import UTC, datetime, timedelta
-from typing import Any, Literal, cast, final
+from typing import Annotated, Any, Literal, cast, final
 
 import aiosqlite
 import msgspec
@@ -8,13 +8,15 @@ from httpx_oauth.clients import google
 from httpx_oauth.clients.google import GoogleOAuth2
 from httpx_oauth.exceptions import GetIdEmailError
 from httpx_oauth.oauth2 import BaseOAuth2
-from litestar import Controller, Request, Response, Router, get
+from litestar import Controller, Request, Response, Router, get, post
 from litestar.di import Provide
+from litestar.enums import RequestEncodingType
 from litestar.exceptions import (
     ClientException,
     InternalServerException,
     NotAuthorizedException,
 )
+from litestar.params import Body
 from litestar.response import Redirect
 from litestar.security.jwt import OAuth2Login
 
@@ -26,8 +28,8 @@ from app.domain.accounts.dependencies import (
 )
 from app.domain.accounts.guards import auth
 from app.domain.accounts.repositories import OAuth2AccountRepository, UserRepository
-from app.domain.accounts.schemas import OAuth2Provider
-from app.lib.crypt import hash_password
+from app.domain.accounts.schemas import OAuth2PasswordGrantRequest, OAuth2Provider
+from app.lib.crypt import hash_password, verify_password
 
 OAuth2ProviderKey = Literal["google"]
 
@@ -71,6 +73,29 @@ class OAuthController(Controller):
 
         return provider_client
 
+    @post(
+        urls.ACCOUNT_OAUTH_LOGIN,
+        operation="OauthLogin",
+        summary="OAuth2 login",
+        include_in_schema=False,
+    )
+    async def oauth_login_username_password(
+        self,
+        data: Annotated[
+            OAuth2PasswordGrantRequest, Body(media_type=RequestEncodingType.URL_ENCODED)
+        ],
+        user_repository: UserRepository,
+    ) -> Response[OAuth2Login]:
+        user = await user_repository.get_by_email_or_phone_number(data.username)
+
+        if user is None:
+            raise NotAuthorizedException("invalid username or password")
+
+        if not await verify_password(user.hashed_password, data.password):
+            raise NotAuthorizedException("invalid username or password")
+
+        return auth.login(str(user.id), send_token_as_response_body=True)
+
     @get(
         urls.ACCOUNT_OAUTH_VIEW_PROVIDERS,
         operation="GetOAuthProviders",
@@ -88,7 +113,7 @@ class OAuthController(Controller):
         ]
 
     @get(
-        urls.ACCOUNT_OAUTH_LOGIN,
+        urls.ACCOUNT_OAUTH_LOGIN_WITH_PROVIDER,
         operation_id="AccountLoginWithOAuth",
         summary="Login with OAuth provider",
         exclude_from_auth=True,
@@ -111,7 +136,7 @@ class OAuthController(Controller):
         return Redirect(path=auth_url, status_code=302)
 
     @get(
-        urls.ACCOUNT_OAUTH_AUTHORIZE,
+        urls.ACCOUNT_OAUTH_AUTHORIZE_WITH_PROVIDER,
         operation_id="AccountAuthorizeWithOAuth",
         summary="OAuth provider callback",
         exclude_from_auth=True,

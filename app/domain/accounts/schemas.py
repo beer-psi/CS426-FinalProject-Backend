@@ -1,3 +1,6 @@
+from dataclasses import dataclass
+from typing import Literal
+
 from msgspec import Struct
 
 
@@ -17,3 +20,10 @@ class OAuth2Provider(Struct):
     key: str
     display_name: str | None
     logo_svg: str | None
+
+
+@dataclass
+class OAuth2PasswordGrantRequest:
+    username: str
+    password: str
+    grant_type: Literal["password"]

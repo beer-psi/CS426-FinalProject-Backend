@@ -49,16 +49,11 @@ async def check_revoked_token(
 
 auth = OAuth2PasswordBearerAuth[User](
     token_secret=settings.app.SECRET_KEY,
-    token_url="/api/v1/auth/login",
+    token_url=urls.ACCOUNT_OAUTH_LOGIN,
     retrieve_user_handler=current_user_from_token,
     revoked_token_handler=check_revoked_token,
     default_token_expiration=timedelta(days=365),
     exclude=[
-        urls.ACCOUNT_LOGIN,
-        urls.ACCOUNT_REGISTER,
-        urls.ACCOUNT_OAUTH_VIEW_PROVIDERS,
-        urls.ACCOUNT_OAUTH_LOGIN,
-        urls.ACCOUNT_OAUTH_AUTHORIZE,
         "^/schema",
     ],
 )
