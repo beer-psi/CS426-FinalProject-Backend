@@ -153,7 +153,7 @@ class ConversationsRepositoryImpl(ConversationsRepository):
             description=conversation_row["description"],
             created_at=conversation_row["created_at"],
             updated_at=conversation_row["updated_at"],
-            require_member_approval=conversation_row["require_member_approval"],
+            require_member_approval=conversation_row["require_member_approval"] == 1,
             participants=[
                 ConversationParticipant(
                     user=UserPublic(
@@ -205,7 +205,7 @@ class ConversationsRepositoryImpl(ConversationsRepository):
                         description=row["description"],
                         created_at=row["created_at"],
                         updated_at=row["updated_at"],
-                        require_member_approval=row["require_member_approval"],
+                        require_member_approval=row["require_member_approval"] == 1,
                         participants=participants,
                     )
                 )
@@ -232,7 +232,7 @@ class ConversationsRepositoryImpl(ConversationsRepository):
             type=conversation_row["type"],
             name=conversation_row["name"],
             description=conversation_row["description"],
-            require_member_approval=conversation_row["require_member_approval"],
+            require_member_approval=conversation_row["require_member_approval"] == 1,
             created_at=conversation_row["created_at"],
             updated_at=conversation_row["updated_at"],
             participants=[
@@ -268,7 +268,7 @@ class ConversationsRepositoryImpl(ConversationsRepository):
             description=row["description"],
             created_at=row["created_at"],
             updated_at=row["updated_at"],
-            require_member_approval=row["require_member_approval"],
+            require_member_approval=row["require_member_approval"] == 1,
             participants=[],
         )
 
@@ -306,7 +306,7 @@ class ConversationsRepositoryImpl(ConversationsRepository):
             type=result["type"],
             name=result["name"],
             description=result["description"],
-            require_member_approval=result["require_member_approval"],
+            require_member_approval=result["require_member_approval"] == 1,
             created_at=result["created_at"],
             updated_at=result["updated_at"],
             participants=[],
@@ -326,7 +326,7 @@ class ConversationsRepositoryImpl(ConversationsRepository):
             type=row["type"],
             name=row["name"],
             description=row["description"],
-            require_member_approval=row["require_member_approval"],
+            require_member_approval=row["require_member_approval"] == 1,
             created_at=row["created_at"],
             updated_at=row["updated_at"],
             participants=[],
