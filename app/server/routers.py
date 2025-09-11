@@ -13,6 +13,7 @@ from app.domain.chat.controllers import (
 )
 from app.domain.gateway.controller import GatewayController
 from app.domain.quizzes.controllers import QuizQuestionsController, QuizzesController
+from app.domain.tasks.controllers import TaskListsController, TasksController
 
 if TYPE_CHECKING:
     from litestar.types import ControllerRouterHandler
@@ -28,4 +29,6 @@ route_handlers: "list[ControllerRouterHandler]" = [
     GatewayController,
     QuizQuestionsController,
     QuizzesController,
+    TaskListsController,
+    TasksController,
 ]
