@@ -189,10 +189,17 @@ class QuizzesController(Controller):
             ),
         )
 
-        if (
-            not completion.choices
-            or (completion_content := completion.choices[0].message.content) is None
-        ):
+        if not completion.choices:
+            raise InternalServerException(
+                detail="There was an error generating the quiz"
+            )
+
+        if completion.choices[0].message.refusal:
+            raise ClientException(
+                detail=f"The model refused to generate a quiz: {completion.choices[0].message.refusal}"
+            )
+
+        if (completion_content := completion.choices[0].message.content) is None:
             raise InternalServerException(
                 detail="There was an error generating the quiz"
             )
