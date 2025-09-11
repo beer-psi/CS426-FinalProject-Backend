@@ -46,7 +46,8 @@ CREATE TABLE tasks(
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     due_at DATETIME DEFAULT NULL,
     completed_at DATETIME DEFAULT NULL,
-    FOREIGN KEY (task_list_id) REFERENCES task_lists(id) ON DELETE CASCADE ON UPDATE CASCADE
+    FOREIGN KEY (task_list_id) REFERENCES task_lists(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CHECK(repeat_from != 'due_date' OR due_at IS NOT NULL)
 );
 
 CREATE TRIGGER prevent_update_tasks_created_at

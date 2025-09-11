@@ -239,11 +239,72 @@ class QuizQueries(aiosql.queries.Queries):
         id: int,
     ) -> "aiosqlite.Row | None": ...
 
+class TasksQueries(aiosql.queries.Queries):
+    async def insert_task_list(
+        self,
+        connection: "aiosqlite.Connection",
+        *,
+        user_id: int,
+        name: str,
+    ) -> "aiosqlite.Row": ...
+    async def get_task_list(
+        self,
+        connection: "aiosqlite.Connection",
+        *,
+        user_id: int,
+        id: int,
+    ) -> "aiosqlite.Row | None": ...
+    async def list_task_lists_by_user(
+        self,
+        connection: "aiosqlite.Connection",
+        *,
+        user_id: int,
+    ) -> list["aiosqlite.Row"]: ...
+    async def update_task_list(
+        self,
+        connection: "aiosqlite.Connection",
+        *,
+        id: int,
+        name: str,
+    ) -> "aiosqlite.Row | None": ...
+    async def delete_task_list(
+        self,
+        connection: "aiosqlite.Connection",
+        *,
+        id: int,
+    ) -> "aiosqlite.Row | None": ...
+    async def list_tasks_by_task_list(
+        self,
+        connection: "aiosqlite.Connection",
+        *,
+        task_list_id: int,
+    ) -> list["aiosqlite.Row"]: ...
+    async def insert_task(
+        self,
+        connection: "aiosqlite.Connection",
+        *,
+        task_list_id: int,
+        completed: bool,
+        title: str,
+        notes: str | None,
+        recurrence: str | None,
+        repeat_from: str | None,
+        due_at: str | None,
+        completed_at: str | None,
+    ) -> "aiosqlite.Row": ...
+    async def delete_task(
+        self,
+        connection: "aiosqlite.Connection",
+        *,
+        id: int,
+    ) -> "aiosqlite.Row | None": ...
+
 class Queries(aiosql.queries.Queries):
     user: UserQueries
     oauth2_account: OAuth2AccountQueries
     token_denylist: TokenDenylistQueries
     chat: ChatQueries
     quiz: QuizQueries
+    tasks: TasksQueries
 
 queries: Queries

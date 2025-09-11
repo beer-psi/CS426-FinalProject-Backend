@@ -10,6 +10,7 @@ dependencies = [
     "aiosqlitepool>=1.0.0",
     "argon2-cffi>=25.1.0",
     "httpx-oauth>=0.16.1",
+    "icalendar>=6.3.1",
     "litestar[jwt]>=2.17.0",
     "openai>=1.107.0",
     "pyjwt>=2.9.0",

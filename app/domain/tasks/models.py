@@ -1,4 +1,5 @@
 from datetime import datetime
+
 from msgspec import Struct
 
 from .schemas import Recurrence, RepeatFromType

@@ -10,24 +10,28 @@ WeekOfMonth: TypeAlias = Literal["first", "second", "third", "fourth", "last"]
 RepeatFromType: TypeAlias = Literal["due_date", "completion_date"]
 
 
-class RecurrencePatternDaily(Struct, tag="daily"):
+class RecurrencePatternCommon(Struct):
+    interval: int
+
+
+class RecurrencePatternDaily(RecurrencePatternCommon, tag="daily"):
     pass
 
 
-class RecurrencePatternWeekly(Struct, tag="weekly"):
+class RecurrencePatternWeekly(RecurrencePatternCommon, tag="weekly"):
     days_of_week: list[DayOfWeek]
 
 
-class RecurrencePatternMonthlyAbsolute(Struct, tag="monthly_absolute"):
+class RecurrencePatternMonthlyAbsolute(RecurrencePatternCommon, tag="monthly_absolute"):
     day_of_month: int
 
 
-class RecurrencePatternMonthlyRelative(Struct, tag="monthly_relative"):
+class RecurrencePatternMonthlyRelative(RecurrencePatternCommon, tag="monthly_relative"):
     day_of_week: DayOfWeek
     week_of_month: WeekOfMonth
 
 
-class RecurrencePatternYearly(Struct, tag="yearly"):
+class RecurrencePatternYearly(RecurrencePatternCommon, tag="yearly"):
     pass
 
 

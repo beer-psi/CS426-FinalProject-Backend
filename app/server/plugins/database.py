@@ -1,6 +1,9 @@
 # pyright: reportPrivateUsage=false, reportAny=false, reportExplicitAny=false, reportUnknownMemberType=false, reportMissingTypeStubs=false
 import sqlite3
-from collections.abc import AsyncGenerator, Sequence  # pyright: ignore[reportShadowedImports]
+from collections.abc import (  # pyright: ignore[reportShadowedImports]
+    AsyncGenerator,
+    Sequence,
+)
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
