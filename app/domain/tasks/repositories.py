@@ -3,9 +3,9 @@ from abc import ABC, abstractmethod
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, cast, override
 
+import msgspec
 from icalendar import vRecur
 from icalendar.prop import vWeekday
-import msgspec
 
 from app.database.queries import queries
 from app.domain.tasks.schemas import (
