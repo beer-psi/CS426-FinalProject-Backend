@@ -129,6 +129,12 @@ class ChatQueries(aiosql.queries.Queries):
         conversation_id: int,
         user_id: int,
     ) -> int: ...
+    async def get_conversation_participants_by_user(
+        self,
+        connection: "aiosqlite.Connection",
+        *,
+        user_id: int,
+    ) -> list["aiosqlite.Row"]: ...
     async def get_attachment_content(
         self,
         connection: "aiosqlite.Connection",

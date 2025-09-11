@@ -73,6 +73,9 @@ class ConversationParticipantsRepository(ABC):
     ) -> ConversationParticipant | None: ...
 
     @abstractmethod
+    async def list_by_user(self, user_id: int) -> list[ConversationParticipant]: ...
+
+    @abstractmethod
     async def insert(
         self,
         conversation_id: int,
@@ -164,6 +167,7 @@ class ConversationsRepositoryImpl(ConversationsRepository):
             require_member_approval=conversation_row["require_member_approval"] == 1,
             participants=[
                 ConversationParticipant(
+                    conversation_id=participant_row["participant_conversation_id"],
                     user=UserPublic(
                         id=participant_row["user_id"],
                         name=participant_row["user_name"],
@@ -193,6 +197,7 @@ class ConversationsRepositoryImpl(ConversationsRepository):
                 )
                 participants = [
                     ConversationParticipant(
+                        conversation_id=participant_row["participant_conversation_id"],
                         user=UserPublic(
                             id=participant_row["user_id"],
                             name=participant_row["user_name"],
@@ -245,6 +250,7 @@ class ConversationsRepositoryImpl(ConversationsRepository):
             updated_at=conversation_row["updated_at"],
             participants=[
                 ConversationParticipant(
+                    conversation_id=participant_row["participant_conversation_id"],
                     user=UserPublic(
                         id=participant_row["user_id"],
                         name=participant_row["user_name"],
@@ -357,6 +363,7 @@ class ConversationParticipantsRepositoryImpl(ConversationParticipantsRepository)
             return None
 
         return ConversationParticipant(
+            conversation_id=row["participant_conversation_id"],
             user=UserPublic(
                 id=row["user_id"],
                 name=row["user_name"],
@@ -366,6 +373,27 @@ class ConversationParticipantsRepositoryImpl(ConversationParticipantsRepository)
             role=row["participant_role"],
             joined_at=row["participant_created_at"],
         )
+
+    @override
+    async def list_by_user(self, user_id: int) -> list[ConversationParticipant]:
+        rows = await queries.chat.get_conversation_participants_by_user(
+            self.connection, user_id=user_id
+        )
+
+        return [
+            ConversationParticipant(
+                conversation_id=row["participant_conversation_id"],
+                user=UserPublic(
+                    id=row["user_id"],
+                    name=row["user_name"],
+                    created_at=row["user_created_at"],
+                    updated_at=row["user_updated_at"],
+                ),
+                role=row["participant_role"],
+                joined_at=row["participant_created_at"],
+            )
+            for row in rows
+        ]
 
     @override
     async def insert(

@@ -233,7 +233,7 @@ class ConversationsController(Controller):
 
         channels.publish(  # pyright: ignore[reportUnknownMemberType]
             {"t": "CONVERSATION_UPDATE", "d": msgspec.to_builtins(conversation)},
-            [f"gateway_user_{p.user.id}" for p in participants],
+            f"gateway_conversation_{conversation.id}",
         )
 
         return conversation
@@ -276,7 +276,7 @@ class ConversationsController(Controller):
 
         channels.publish(  # pyright: ignore[reportUnknownMemberType]
             {"t": "CONVERSATION_DELETE", "d": {"id": conversation.id}},
-            [f"gateway_user_{p.user.id}" for p in conversation.participants],
+            f"gateway_conversation_{conversation.id}",
         )
 
         return conversation
@@ -311,5 +311,5 @@ class ConversationsController(Controller):
                     "timestamp": datetime.now(UTC).timestamp(),
                 },
             },
-            [f"gateway_user_{p.user.id}" for p in conversation.participants],
+            f"gateway_conversation_{conversation.id}",
         )

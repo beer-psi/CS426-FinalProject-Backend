@@ -27,6 +27,7 @@ class Message(Struct):
 
 
 class ConversationParticipant(Struct):
+    conversation_id: int
     user: UserPublic
     role: Literal["admin", "user"]
     joined_at: datetime

@@ -94,16 +94,8 @@ class ConversationParticipantsController(Controller):
         conversation.participants.append(participant)
         await db_connection.commit()
 
-        channels.publish(  # pyright: ignore[reportUnknownMemberType]
-            {
-                "t": "CONVERSATION_CREATE",
-                "d": {
-                    **msgspec.to_builtins(conversation),
-                    "participant": msgspec.to_builtins(participant),
-                },
-            },
-            f"gateway_user_{user_id}",
-        )
+        # send this first because CONVERSATION_CREATE will subscribe the new user to the conversation
+        # channel
         channels.publish(  # pyright: ignore[reportUnknownMemberType]
             {
                 "t": "CONVERSATION_PARTICIPANTS_UPDATE",
@@ -114,7 +106,17 @@ class ConversationParticipantsController(Controller):
                     "removed_participant_ids": [],
                 },
             },
-            [f"gateway_user_{p.user.id}" for p in conversation.participants],
+            f"gateway_conversation_{conversation.id}",
+        )
+        channels.publish(  # pyright: ignore[reportUnknownMemberType]
+            {
+                "t": "CONVERSATION_CREATE",
+                "d": {
+                    **msgspec.to_builtins(conversation),
+                    "participant": msgspec.to_builtins(participant),
+                },
+            },
+            f"gateway_user_{user_id}",
         )
 
         return participant
@@ -162,6 +164,8 @@ class ConversationParticipantsController(Controller):
         _ = await conversation_participants_repository.delete(conversation_id, user_id)
         await db_connection.commit()
 
+        # send this first so the gateway unsubscribes the user from the conversation and
+        # the removed user does not receive CONVERSATION_PARTICIPANTS_UPDATE
         channels.publish(  # pyright: ignore[reportUnknownMemberType]
             {"t": "CONVERSATION_DELETE", "d": {"id": conversation.id}},
             f"gateway_user_{removed_participant.user.id}",
@@ -176,11 +180,7 @@ class ConversationParticipantsController(Controller):
                     "removed_participant_ids": [removed_participant.user.id],
                 },
             },
-            [
-                f"gateway_user_{p.user.id}"
-                for p in conversation.participants
-                if p.user.id != removed_participant.user.id
-            ],
+            f"gateway_conversation_{conversation.id}",
         )
 
         return removed_participant
@@ -219,6 +219,7 @@ class ConversationParticipantsController(Controller):
         )
         await db_connection.commit()
 
+        # same reason as deleting another user first
         channels.publish(  # pyright: ignore[reportUnknownMemberType]
             {"t": "CONVERSATION_DELETE", "d": {"id": conversation.id}},
             f"gateway_user_{removed_participant.user.id}",
@@ -233,11 +234,7 @@ class ConversationParticipantsController(Controller):
                     "removed_participant_ids": [removed_participant.user.id],
                 },
             },
-            [
-                f"gateway_user_{p.user.id}"
-                for p in conversation.participants
-                if p.user.id != removed_participant.user.id
-            ],
+            f"gateway_conversation_{conversation.id}",
         )
 
         return removed_participant
