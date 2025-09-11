@@ -146,6 +146,10 @@ class ConversationsController(Controller):
                     await db_connection.rollback()
                     raise NotFoundException
 
+                await conversation_participants_repository.insert(
+                    conversation.id, recipient_id, current_user.id, "user"
+                )
+
                 participant = await conversation_participants_repository.get(
                     conversation.id, recipient_id
                 )
