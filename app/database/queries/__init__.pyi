@@ -192,6 +192,22 @@ class ChatQueries(aiosql.queries.Queries):
         *,
         id: int,
     ) -> int: ...
+    async def search_messages(
+        self,
+        connection: "aiosqlite.Connection",
+        *,
+        conversation_id: int,
+        query: str,
+        limit: int,
+        offset: int,
+    ) -> list["aiosqlite.Row"]: ...
+    async def count_messages_matching_query(
+        self,
+        connection: "aiosqlite.Connection",
+        *,
+        conversation_id: int,
+        query: str,
+    ) -> int: ...
 
 class QuizQueries(aiosql.queries.Queries):
     async def insert_quiz(

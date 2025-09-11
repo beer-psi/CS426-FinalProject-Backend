@@ -111,3 +111,31 @@ RETURNING *;
 -- name: delete_message(id)!
 -- Deletes a message.
 UPDATE messages SET deleted_at = CURRENT_TIMESTAMP WHERE id = :id;
+
+-- name: search_messages(conversation_id, query, limit, offset)
+SELECT
+    m.id AS message_id,
+    m.conversation_id AS message_conversation_id,
+    m.reply_to_id AS message_reply_to_id,
+    m.user_id AS message_user_id,
+    m.content AS message_content,
+    m.created_at AS message_created_at,
+    m.updated_at AS message_updated_at,
+    m.edited_at AS message_edited_at,
+    ma.id AS message_attachment_id,
+    ma.filename AS message_attachment_filename,
+    ma.content_type AS message_attachment_content_type,
+    ma.file_size AS message_attachment_file_size
+FROM message_search_index(:query) s
+JOIN messages m ON s.rowid = m.id
+LEFT JOIN message_attachments ma ON m.id = ma.message_id
+WHERE m.conversation_id = :conversation_id AND m.deleted_at IS NULL
+ORDER BY m.created_at DESC
+LIMIT :limit
+OFFSET :offset;
+
+-- name: count_messages_matching_query(conversation_id, query)$
+SELECT COUNT(m.id)
+FROM message_search_index(:query) s
+JOIN messages m ON s.rowid = m.id
+WHERE m.conversation_id = :conversation_id AND m.deleted_at IS NULL;

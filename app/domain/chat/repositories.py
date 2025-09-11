@@ -90,6 +90,14 @@ class MessagesRepository(ABC):
     async def get(self, conversation_id: int, id: int) -> Message | None: ...
 
     @abstractmethod
+    async def search(
+        self, conversation_id: int, query: str, limit: int, offset: int
+    ) -> list[Message]: ...
+
+    @abstractmethod
+    async def count_matching(self, conversation_id: int, query: str) -> int: ...
+
+    @abstractmethod
     async def list(
         self,
         conversation_id: int,
@@ -418,6 +426,60 @@ class MessagesRepositoryImpl(MessagesRepository):
             ]
             if row["message_attachment_id"] is not None
             else [],
+        )
+
+    @override
+    async def search(
+        self, conversation_id: int, query: str, limit: int, offset: int
+    ) -> list[Message]:
+        result: list[Message] = []
+        rows = await queries.chat.search_messages(
+            self.connection,
+            conversation_id=conversation_id,
+            query=query,
+            limit=limit,
+            offset=offset,
+        )
+
+        rows_by_message_id: dict[int, list["aiosqlite.Row"]] = {}
+
+        for row in rows:
+            rows_by_message_id.setdefault(row["message_id"], []).append(row)
+
+        # the rows are ordered from latest message to oldest, and dictionaries
+        # remember their insertion order since python 3.7+
+        for rows in rows_by_message_id.values():
+            row = rows[0]
+            message = Message(
+                id=row["message_id"],
+                conversation_id=row["message_conversation_id"],
+                reply_to_id=row["message_reply_to_id"],
+                user_id=row["message_user_id"],
+                content=row["message_content"],
+                created_at=row["message_created_at"],
+                updated_at=row["message_updated_at"],
+                edited_at=row["message_edited_at"],
+                attachments=[
+                    MessageAttachment(
+                        id=row["message_attachment_id"],
+                        filename=row["message_attachment_filename"],
+                        content_type=row["message_attachment_content_type"],
+                        file_size=row["message_attachment_file_size"],
+                    )
+                    for row in rows
+                ]
+                if row["message_attachment_id"] is not None
+                else [],
+            )
+
+            result.append(message)
+
+        return result
+
+    @override
+    async def count_matching(self, conversation_id: int, query: str) -> int:
+        return await queries.chat.count_messages_matching_query(
+            self.connection, conversation_id=conversation_id, query=query
         )
 
     @override

@@ -12,6 +12,7 @@ from litestar.exceptions import (
     NotFoundException,
     PermissionDeniedException,
 )
+from litestar.pagination import OffsetPagination
 from litestar.params import Body, Parameter
 from litestar.status_codes import HTTP_200_OK
 
@@ -180,3 +181,35 @@ class MessagesController(Controller):
         )
 
         return message
+
+    @get(
+        urls.SEARCH_MESSAGE_IN_CONVERSATION,
+        operation_id="SearchMessageInConversation",
+        summary="Search conversation messages",
+    )
+    async def search_messages(
+        self,
+        conversation_id: int,
+        content: str,
+        offset: int,
+        current_user: User,
+        conversations_repository: ConversationsRepository,
+        messages_repository: MessagesRepository,
+    ) -> OffsetPagination[Message]:
+        conversation = await conversations_repository.get(
+            conversation_id, current_user.id
+        )
+
+        if conversation is None:
+            raise NotFoundException
+
+        count = await messages_repository.count_matching(conversation.id, content)
+
+        if count == 0:
+            return OffsetPagination(items=[], limit=25, offset=offset, total=0)
+
+        messages = await messages_repository.search(
+            conversation.id, content, 25, offset
+        )
+
+        return OffsetPagination(items=messages, limit=25, offset=offset, total=count)
