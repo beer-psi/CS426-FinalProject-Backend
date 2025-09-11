@@ -9,7 +9,10 @@ def create_app() -> "Litestar":
     from litestar.channels.backends.memory import MemoryChannelsBackend
     from litestar.di import Provide
     from litestar.openapi.config import OpenAPIConfig
-    from litestar.openapi.plugins import JsonRenderPlugin, RedocRenderPlugin
+    from litestar.openapi.plugins import (
+        JsonRenderPlugin,
+        ScalarRenderPlugin,
+    )
 
     from .config import sqlite
     from .domain.accounts.dependencies import provide_current_user
@@ -33,7 +36,7 @@ def create_app() -> "Litestar":
             version=pyproject["project"]["version"],  # pyright: ignore[reportAny]
             description=pyproject["project"]["description"],  # pyright: ignore[reportAny]
             render_plugins=[
-                RedocRenderPlugin(),
+                ScalarRenderPlugin(),
                 JsonRenderPlugin(),
             ],
         ),
