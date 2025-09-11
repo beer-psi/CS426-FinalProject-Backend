@@ -141,6 +141,19 @@ class ConversationsController(Controller):
                 data.description,
             )
 
+            await conversation_participants_repository.insert(
+                conversation.id, current_user.id, current_user.id, "admin"
+            )
+
+            participant = await conversation_participants_repository.get(
+                conversation.id, current_user.id
+            )
+
+            if participant is None:
+                raise InternalServerException
+
+            conversation.participants.append(participant)
+
             for recipient_id in data.recipient_ids:
                 if await user_repository.get(recipient_id) is None:
                     await db_connection.rollback()
