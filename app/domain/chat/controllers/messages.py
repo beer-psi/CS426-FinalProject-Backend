@@ -128,7 +128,7 @@ class MessagesController(Controller):
 
         channels.publish(  # pyright: ignore[reportUnknownMemberType]
             {"t": "MESSAGE_CREATE", "d": msgspec.to_builtins(message)},
-            [f"gateway_user_{p.user.id}" for p in conversation.participants],
+            f"gateway_conversation_{conversation.id}",
         )
 
         return message
@@ -177,7 +177,7 @@ class MessagesController(Controller):
 
         channels.publish(  # pyright: ignore[reportUnknownMemberType]
             {"t": "MESSAGE_DELETE", "d": {"id": message.id}},
-            [f"gateway_user_{p.user.id}" for p in conversation.participants],
+            f"gateway_conversation_{conversation.id}",
         )
 
         return message
