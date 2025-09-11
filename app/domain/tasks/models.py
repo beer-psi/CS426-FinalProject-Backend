@@ -8,6 +8,8 @@ class TaskList(Struct):
     id: int
     user_id: int
     name: str
+    created_at: datetime
+    updated_at: datetime
 
 
 class Task(Struct):
