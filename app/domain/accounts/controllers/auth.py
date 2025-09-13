@@ -74,6 +74,7 @@ class AuthController(Controller):
         urls.ACCOUNT_REGISTER,
         operation_id="AccountRegister",
         summary="Register account",
+        exclude_from_auth=True,
     )
     async def register(
         self,
